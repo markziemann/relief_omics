@@ -1,0 +1,234 @@
+---
+title: "RELEIF: RNA expression analysis"
+author: "Mark Ziemann"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+theme: cosmo
+fig_width: 7
+fig_height: 7
+---
+
+# Introduction
+
+
+# Packages 
+
+```{r,packages}
+suppressPackageStartupMessages({
+    library("tidyverse")
+    library("reshape2")
+    library("DESeq2")
+    library("gplots")
+    library("fgsea")
+})
+```
+
+# Import read counts
+
+```{r,importdata}
+tmp <- read.table("3col.tsv",header=F)
+x <- as.matrix(acast(tmp, V2~V1, value.var="V3", fun.aggregate = sum))
+x <- as.data.frame(x)
+accession <- sapply((strsplit(rownames(x),"\\|")),"[[",2)
+symbol<-sapply((strsplit(rownames(x),"\\|")),"[[",6)
+x$geneid <- paste(accession,symbol)
+
+xx <- aggregate(. ~ geneid,x,sum)
+rownames(xx) <- xx$geneid
+colnames <- gsub("T0R","T0",colnames(xx))
+xx$geneid = NULL
+xx <- round(xx)
+```
+
+# curate the samplesheet
+
+```{r,samplesheet}
+samplesheet<-read.csv("samplesheet.tsv",sep="\t",stringsAsFactors=FALSE)
+mysamples <- colnames(xx)
+baseline <- mysamples[grep("T0",mysamples)]
+postop <- mysamples[grep("POD",mysamples)]
+baseline <- sapply(strsplit(baseline,"-"),"[[",1)
+postop <- sapply(strsplit(postop,"-"),"[[",1)
+mysamples <- intersect(baseline,postop)
+rownames(samplesheet2) <- paste(samplesheet2$RG_number,"T0",sep="-")
+samplesheet3 <-samplesheet2
+rownames(samplesheet2) <- paste(samplesheet2$RG_number,"T0",sep="-")
+rownames(samplesheet3) <- paste(samplesheet2$RG_number,"POD",sep="-")
+samplesheet2$timepoint <- 0       
+samplesheet3$timepoint <- 1
+samplesheet <- rbind(samplesheet2,samplesheet3)
+
+# filter the data matrix
+xx <- xx[,which(colnames(xx) %in% rownames(samplesheet))]
+samplesheet <- samplesheet[which(rownames(samplesheet) %in% colnames(xx)),]
+```
+
+
+# Prediction of sex
+
+Is based on expression of XIST. High expression indicates female.
+
+```{r,sexpred}
+xx2 <- xx
+xx2 <- xx2/colSums(xx2)*1000000
+
+rownames(xx2) <- sapply(strsplit(rownames(xx)," "),"[[",1)
+chr <- read.table("../refgenome/chromosomes.tsv",row.names=1)
+xx2 <- merge(chr,xx2,by=0)
+rownames(xx2) <- xx2$Row.names
+xx2$Row.names = NULL
+
+xx3 <- aggregate(. ~ V2,xx2,sum)
+rownames(xx3) <- xx3$V2
+xx3$V2=NULL
+
+colfunc <- colorRampPalette(c("blue", "white", "red"))
+
+heatmap.2( as.matrix(xx3), col=colfunc(25),scale="row",
+ trace="none",margins = c(10,15), cexRow=.7, cexCol=.8,  main="Gene Expression by Chromosomes")
+
+xx2 <- xx/colSums(xx)*1000000
+XIST <- grep( "XIST" , rownames(xx2))
+XIST <- xx2[XIST,]
+XIST <- as.vector(t(XIST))
+names(XIST) <- colnames(xx2)
+
+par(mai=c(0.5,2,0.5,1))
+barplot(XIST[order(XIST)],horiz=TRUE,las=1,cex.names=0.5,main="XIST expression")
+
+samplesheet <- samplesheet[order(rownames(samplesheet)),]
+samplesheet$male <- as.numeric(XIST<10)
+
+# SRY is not expressed
+SRY <- grep( "SRY" , rownames(xx2))
+SRY <- xx2[SRY,]
+SRY <- as.vector(t(SRY))
+names(SRY) <- colnames(SRY)
+```
+
+# MDS analysis
+
+```{r,mds}
+plot(cmdscale(dist(t(xx))), xlab="Coordinate 1", ylab="Coordinate 2",
+  type = "p", col="gray", pch=19, cex.axis=1.3,cex.lab=1.3, bty='l')
+text(cmdscale(dist(t(xx))), labels=colnames(xx),cex=1.3)
+heatmap.2(cor(xx),trace="none",margins = c(10,10), main="pearson correlation heatmap")
+heatmap.2(cor(xx,method="s"),trace="none",margins = c(10,10), main="spearman correlation heatmap")
+```
+
+
+# DE analysis baseline versus post-op
+
+```{r,de1}
+# filter genes with fewer than 10 reads per sample
+NAME = "t0_v_pod"
+y <- xx[which(rowSums(xx)/ncol(xx)>=(10)),]
+dds <- DESeqDataSetFromMatrix(countData = y , colData = samplesheet, design = ~ male + timepoint )
+res <- DESeq(dds)
+z <- results(res)
+vsd <- vst(dds, blind=FALSE)
+zz <-cbind(as.data.frame(z),assay(vsd))
+dge <- as.data.frame(zz[order(zz$pvalue),])
+dge[1:10,1:6]
+sig <- subset(dge,padj<0.05)
+SIG = nrow(sig)
+DN = nrow(subset(sig,log2FoldChange<0))
+UP = nrow(subset(sig,log2FoldChange>0))
+HEADER = paste(NAME, SIG , "DGEs,", UP ,"upregulated,", DN, "downregulated")
+# smear
+plot(log2(dge$baseMean),dge$log2FoldChange,cex=0.6,cex.axis=1.2,cex.lab=1.3, xlab="log2 base mean",
+  ylim=c(-3,3),ylab="log2 fold change" ,pch=19,col="#838383")
+points(log2(sig$baseMean),sig$log2FoldChange,cex=0.6,pch=19,col="red")
+mtext((HEADER),cex=1.2)
+top <- head(sig,20)
+# volcano
+plot(dge$log2FoldChange, -log2(dge$pvalue) ,cex=0.6, cex.lab=1.3,cex.axis=1.2,
+ xlim=c(-3,3),xlab="log2 fold change", ylab="-log2 p-value" ,pch=19,col="#838383")
+points(sig$log2FoldChange, -log2(sig$pvalue),cex=0.6,pch=19,col="red")	
+mtext((HEADER),cex=1.2)
+# top N gene heatmap
+colfunc <- colorRampPalette(c("blue", "white", "red"))
+heatmap.2(  as.matrix(dge[1:50,c(7:ncol(dge))]), col=colfunc(25),scale="row",
+ trace="none",margins = c(6,10), cexRow=.6, cexCol=.5, main="Top 50 genes")
+t0_v_pod <- dge
+```
+
+# DE analysis post-op low versus high CRP
+
+```{r,de2}
+# filter genes with fewer than 10 reads per sample
+NAME = "pod_crp"
+ss <- subset(samplesheet,timepoint==1)
+xxx <- xx[,colnames(xx) %in% rownames(ss)]
+y <- xxx[which(rowSums(xxx)/ncol(xxx)>=(10)),]
+dds <- DESeqDataSetFromMatrix(countData = y , colData = ss, design = ~ male + CrpGroup )
+res <- DESeq(dds)
+z <- results(res)
+vsd <- vst(dds, blind=FALSE)
+zz <- cbind(as.data.frame(z),assay(vsd))
+dge <- as.data.frame(zz[order(zz$pvalue),])
+dge[1:10,1:6]
+sig <- subset(dge,padj<0.05)
+SIG = nrow(sig)
+DN = nrow(subset(sig,log2FoldChange<0))
+UP = nrow(subset(sig,log2FoldChange>0))
+HEADER = paste(NAME, SIG , "DGEs,", UP ,"upregulated,", DN, "downregulated")
+# smear
+plot(log2(dge$baseMean),dge$log2FoldChange,cex=0.6,cex.axis=1.2,cex.lab=1.3, xlab="log2 base mean",
+  ylim=c(-3,3),ylab="log2 fold change" ,pch=19,col="#838383")
+points(log2(sig$baseMean),sig$log2FoldChange,cex=0.6,pch=19,col="red")
+mtext((HEADER),cex=1.2)
+top <- head(sig,20)
+# volcano
+plot(dge$log2FoldChange, -log2(dge$pvalue) ,cex=0.6, cex.lab=1.3,cex.axis=1.2,
+ xlim=c(-3,3),xlab="log2 fold change", ylab="-log2 p-value" ,pch=19,col="#838383")
+points(sig$log2FoldChange, -log2(sig$pvalue),cex=0.6,pch=19,col="red")
+mtext((HEADER),cex=1.2)
+# top N gene heatmap
+colfunc <- colorRampPalette(c("blue", "white", "red"))
+heatmap.2(  as.matrix(dge[1:50,c(7:ncol(dge))]), col=colfunc(25),scale="row",
+ trace="none",margins = c(6,10), cexRow=.6, cexCol=.5, main="Top 50 genes")
+pod_crp <- dge
+```
+
+
+# DE analysis baseline low versus high CRP
+
+```{r,de3}
+# filter genes with fewer than 10 reads per sample
+NAME = "t0_crp"
+ss <- subset(samplesheet,timepoint==0)
+xxx <- xx[,colnames(xx) %in% rownames(ss)]
+y <- xxx[which(rowSums(xxx)/ncol(xxx)>=(10)),]
+dds <- DESeqDataSetFromMatrix(countData = y , colData = ss, design = ~ male + CrpGroup )
+res <- DESeq(dds)
+z <- results(res)
+vsd <- vst(dds, blind=FALSE)
+zz <- cbind(as.data.frame(z),assay(vsd))
+dge <- as.data.frame(zz[order(zz$pvalue),])
+dge[1:10,1:6]
+sig <- subset(dge,padj<0.05)
+SIG = nrow(sig)
+DN = nrow(subset(sig,log2FoldChange<0))
+UP = nrow(subset(sig,log2FoldChange>0))
+HEADER = paste(NAME, SIG , "DGEs,", UP ,"upregulated,", DN, "downregulated")
+# smear
+plot(log2(dge$baseMean),dge$log2FoldChange,cex=0.6,cex.axis=1.2,cex.lab=1.3, xlab="log2 base mean",
+  ylim=c(-3,3),ylab="log2 fold change" ,pch=19,col="#838383")
+points(log2(sig$baseMean),sig$log2FoldChange,cex=0.6,pch=19,col="red")
+mtext((HEADER),cex=1.2)
+top <- head(sig,20)
+# volcano
+plot(dge$log2FoldChange, -log2(dge$pvalue) ,cex=0.6, cex.lab=1.3,cex.axis=1.2,
+ xlim=c(-3,3),xlab="log2 fold change", ylab="-log2 p-value" ,pch=19,col="#838383")
+points(sig$log2FoldChange, -log2(sig$pvalue),cex=0.6,pch=19,col="red")
+mtext((HEADER),cex=1.2)
+# top N gene heatmap
+colfunc <- colorRampPalette(c("blue", "white", "red"))
+heatmap.2(  as.matrix(dge[1:50,c(7:ncol(dge))]), col=colfunc(25),scale="row",
+ trace="none",margins = c(6,10), cexRow=.6, cexCol=.5, main="Top 50 genes")
+t0_crp <- dge
+```
+
