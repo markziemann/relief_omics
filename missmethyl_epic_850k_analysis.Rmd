@@ -32,6 +32,7 @@ suppressPackageStartupMessages({
     library("IlluminaHumanMethylationEPICmanifest")
     library("beeswarm")
     library("gplots")
+    library("topconfects")
     library("FlowSorted.Blood.EPIC")
 })
 data(Locations)
@@ -115,16 +116,18 @@ cgy<-rownames(Locations[which(Locations$chr %in% "chrY"),])
 mvx<-Mval2[which(rownames(Mval2) %in% cgx),]
 mvy<-Mval2[which(rownames(Mval2) %in% cgy),]
 plot(colMeans(mvy),colMeans(mvx))
-female <- names(which(colMeans(mvy) < -0.4))
+female <- names(which(colMeans(mvy) < -0))
 female <- unique(sapply(strsplit(female,"-"),"[",1))
-male <- names(which(colMeans(mvy) > 0.4))
+male <- names(which(colMeans(mvy) > 0))
 male <- unique(sapply(strsplit(male,"-"),"[",1))
 intersect(female,male)
 # RG227 looks like a problem 
-sample.annotation2$malemeth <- as.numeric(colMeans(mvy) > 0.4)
+sample.annotation2$malemeth <- as.numeric(colMeans(mvy) > 0)
 sample.annotation3 <- sample.annotation2[grep("RG227",sample.annotation2$Sample_Name,invert=TRUE),]
 Mval3 <- Mval2[,grep("RG227",colnames(Mval2),invert=TRUE)]
+write.table(sample.annotation3,file="samplesheet_mod.tsv",quote=FALSE,sep="\t")
 save.image("missmethyl_epic_850k_analysis.Rdata")
+
 ```
 
 # Differential analysis including sex chromosomes
@@ -144,7 +147,8 @@ fit.reduced <- eBayes(fit.reduced)
 summary(decideTests(fit.reduced))
 dm <- topTable(fit.reduced,coef=4, number = Inf)
 dma <- merge(myann,dm,by=0)
-head(dma)
+dma <- dma[order(dma$P.Value),]
+head(dma,10)
 dm_up <- rownames(subset(dm,adj.P.Val<0.05 & logFC>0))
 dm_dn <- rownames(subset(dm,adj.P.Val<0.05 & logFC<0))
 length(dm_up)
@@ -154,13 +158,41 @@ make_dm_plots(dm = dm ,name=name , mx=beta, groups=timepoint, confects=confects)
 t0vPod_in <- list("dma"=dma, "dm_up"=dm_up, "dm_dn"=dm_dn, "confects"=confects)
 ```
 
-## Low vs High CRP samples
+## Low vs High CRP samples post-op
+
+Here we compare the post-op samples of patients with low CRP to high CRP.
+
+```{r,dm2}
+name="t1_crp_in"
+sample.annotation3$timepoint <- factor(as.numeric(grepl("POD",sample.annotation3$Sample_Name)))
+sample.annotation4 <- sample.annotation3[sample.annotation3$timepoint==1,]
+Mval4 <- Mval3[,which(colnames(Mval3) %in% sample.annotation4$Sample_Name)]
+crpgrp <- factor(sample.annotation4$CrpGroup,levels=c(0,1))
+age <- sample.annotation4$age
+malemeth <- factor(sample.annotation4$malemeth)
+design <- model.matrix(~age + malemeth + crpgrp)
+fit.reduced <- lmFit(Mval4,design)
+fit.reduced <- eBayes(fit.reduced)
+summary(decideTests(fit.reduced))
+dm <- topTable(fit.reduced,coef=4, number = Inf)
+dma <- merge(myann,dm,by=0)
+dma <- dma[order(dma$P.Value),]
+head(dma,10)
+dm_up <- rownames(subset(dm,adj.P.Val<0.05 & logFC>0))
+dm_dn <- rownames(subset(dm,adj.P.Val<0.05 & logFC<0))
+length(dm_up)
+length(dm_dn)
+confects <- limma_confects(fit.reduced, coef=4, fdr=0.05)
+make_dm_plots(dm = dm ,name=name , mx=beta, groups=timepoint, confects=confects)
+t0_crp_in <- list("dma"=dma, "dm_up"=dm_up, "dm_dn"=dm_dn, "confects"=confects)
+```
+
+## Low vs High CRP samples baseline
 
 Here we compare the baseline samples of patients with low CRP to high CRP.
 
-```{r,dm2}
+```{r,dm3}
 name="t0_crp_in"
-sample.annotation3$timepoint <- factor(as.numeric(grepl("POD",sample.annotation3$Sample_Name)))
 sample.annotation4 <- sample.annotation3[sample.annotation3$timepoint==0,]
 Mval4 <- Mval3[,which(colnames(Mval3) %in% sample.annotation4$Sample_Name)]
 crpgrp <- factor(sample.annotation4$CrpGroup,levels=c(0,1))
@@ -172,7 +204,8 @@ fit.reduced <- eBayes(fit.reduced)
 summary(decideTests(fit.reduced))
 dm <- topTable(fit.reduced,coef=4, number = Inf)
 dma <- merge(myann,dm,by=0)
-head(dma)
+dma <- dma[order(dma$P.Value),]
+head(dma,10)
 dm_up <- rownames(subset(dm,adj.P.Val<0.05 & logFC>0))
 dm_dn <- rownames(subset(dm,adj.P.Val<0.05 & logFC<0))
 length(dm_up)
@@ -187,9 +220,9 @@ t0_crp_in <- list("dma"=dma, "dm_up"=dm_up, "dm_dn"=dm_dn, "confects"=confects)
 
 ## T0 vs POD analysis
 
-Here we compare pre-op samples to post-op samples, excluding X and Y chromosomes.
+Here we compare pre-op samples to post-op samples, excluding sex chromosomes.
 
-```{r,dm3}
+```{r,dm4}
 name="t0vPod_ex"
 cgx<-rownames(Locations[which(Locations$chr %in% "chrX"),])
 cgy<-rownames(Locations[which(Locations$chr %in% "chrY"),])
@@ -204,7 +237,8 @@ fit.reduced <- eBayes(fit.reduced)
 summary(decideTests(fit.reduced))
 dm <- topTable(fit.reduced,coef=4, number = Inf)
 dma <- merge(myann,dm,by=0)
-head(dma)
+dma <- dma[order(dma$P.Value),]
+head(dma,10)
 dm_up <- rownames(subset(dm,adj.P.Val<0.05 & logFC>0))
 dm_dn <- rownames(subset(dm,adj.P.Val<0.05 & logFC<0))
 length(dm_up)
@@ -212,13 +246,43 @@ length(dm_dn)
 confects <- limma_confects(fit.reduced, coef=4, fdr=0.05)
 make_dm_plots(dm = dm ,name=name , mx=beta, groups=timepoint, confects=confects)
 t0vPod_ex <- list("dma"=dma, "dm_up"=dm_up, "dm_dn"=dm_dn, "confects"=confects)
+
+```
+
+## Low vs High CRP samples post-op
+
+Here we compare the post-op samples of patients with low CRP to high CRP excluding sex chromosomes.
+
+```{r,dm5}
+name="t0_crp_ex"
+sample.annotation4 <- sample.annotation3[sample.annotation3$timepoint==1,]
+Mval6 <- Mval3[,which(colnames(Mval3) %in% sample.annotation4$Sample_Name)]
+Mval6 <- Mval6[which(!rownames(Mval6) %in% cgxy),]
+crpgrp <- factor(sample.annotation4$CrpGroup,levels=c(0,1))
+age <- sample.annotation4$age
+malemeth <- factor(sample.annotation4$malemeth)
+design <- model.matrix(~age + malemeth + crpgrp)
+fit.reduced <- lmFit(Mval6,design)
+fit.reduced <- eBayes(fit.reduced)
+summary(decideTests(fit.reduced))
+dm <- topTable(fit.reduced,coef=4, number = Inf)
+dma <- merge(myann,dm,by=0)
+dma <- dma[order(dma$P.Value),]
+head(dma,10)
+dm_up <- rownames(subset(dm,adj.P.Val<0.05 & logFC>0))
+dm_dn <- rownames(subset(dm,adj.P.Val<0.05 & logFC<0))
+length(dm_up)
+length(dm_dn)
+confects <- limma_confects(fit.reduced, coef=4, fdr=0.05)
+make_dm_plots(dm = dm ,name=name , mx=beta, groups=timepoint, confects=confects)
+t0_crp_ex <- list("dma"=dma, "dm_up"=dm_up, "dm_dn"=dm_dn, "confects"=confects)
 ```
 
 ## Low vs High CRP samples
 
-Here we compare pre-op samples to post-op samples, excluding X and Y chromosomes.
+Here we compare the baseliine samples of patients with low CRP to high CRP excluding sex chromosomes.
 
-```{r,dm4}
+```{r,dm6}
 name="t0_crp_ex"
 sample.annotation4 <- sample.annotation3[sample.annotation3$timepoint==0,]
 Mval6 <- Mval3[,which(colnames(Mval3) %in% sample.annotation4$Sample_Name)]
@@ -232,7 +296,8 @@ fit.reduced <- eBayes(fit.reduced)
 summary(decideTests(fit.reduced))
 dm <- topTable(fit.reduced,coef=4, number = Inf)
 dma <- merge(myann,dm,by=0)
-head(dma)
+dma <- dma[order(dma$P.Value),]
+head(dma,10)
 dm_up <- rownames(subset(dm,adj.P.Val<0.05 & logFC>0))
 dm_dn <- rownames(subset(dm,adj.P.Val<0.05 & logFC<0))
 length(dm_up)
@@ -243,7 +308,6 @@ t0_crp_ex <- list("dma"=dma, "dm_up"=dm_up, "dm_dn"=dm_dn, "confects"=confects)
 ```
 
 # Normalise for blood composition and repeat the analysis ####
-
 
 ```{r,methimport2}
 basedir = "analysis/idat"
@@ -284,8 +348,8 @@ colnames(Mval2)<-sample.annotation2$Sample_Name
 
 Here we compare pre-op samples to post-op samples.
 
-```{r,dm5}
-name="t0vPod_in"
+```{r,dm7}
+name="t0vPod_in_blood"
 timepoint <- factor(as.numeric(grepl("POD",sample.annotation3$Sample_Name)))
 age <- sample.annotation3$age
 malemeth <- factor(sample.annotation3$malemeth)
@@ -295,7 +359,8 @@ fit.reduced <- eBayes(fit.reduced)
 summary(decideTests(fit.reduced))
 dm <- topTable(fit.reduced,coef=4, number = Inf)
 dma <- merge(myann,dm,by=0)
-head(dma)
+dma <- dma[order(dma$P.Value),]
+head(dma,10)
 dm_up <- rownames(subset(dm,adj.P.Val<0.05 & logFC>0))
 dm_dn <- rownames(subset(dm,adj.P.Val<0.05 & logFC<0))
 length(dm_up)
@@ -305,13 +370,41 @@ make_dm_plots(dm = dm ,name=name , mx=beta, groups=timepoint, confects=confects)
 t0vPod_in <- list("dma"=dma, "dm_up"=dm_up, "dm_dn"=dm_dn, "confects"=confects)
 ```
 
-## Low vs High CRP samples
+## Low vs High CRP samples post-op
+
+Here we compare the post-op samples of patients with low CRP to high CRP.
+
+```{r,dm8}
+name="t1_crp_in_blood"
+sample.annotation4 <- sample.annotation3[sample.annotation3$timepoint==1,]
+Mval4 <- Mval3[,which(colnames(Mval3) %in% sample.annotation4$Sample_Name)]
+crpgrp <- factor(sample.annotation4$CrpGroup,levels=c(0,1))
+age <- sample.annotation4$age
+malemeth <- factor(sample.annotation4$malemeth)
+design <- model.matrix(~age + malemeth + crpgrp)
+fit.reduced <- lmFit(Mval4,design)
+fit.reduced <- eBayes(fit.reduced)
+summary(decideTests(fit.reduced))
+dm <- topTable(fit.reduced,coef=4, number = Inf)
+dma <- merge(myann,dm,by=0)
+dma <- dma[order(dma$P.Value),]
+head(dma,10)
+dm_up <- rownames(subset(dm,adj.P.Val<0.05 & logFC>0))
+dm_dn <- rownames(subset(dm,adj.P.Val<0.05 & logFC<0))
+length(dm_up)
+length(dm_dn)
+confects <- limma_confects(fit.reduced, coef=4, fdr=0.05)
+make_dm_plots(dm = dm ,name=name , mx=beta, groups=timepoint, confects=confects)
+t0_crp_in <- list("dma"=dma, "dm_up"=dm_up, "dm_dn"=dm_dn, "confects"=confects)
+```
+
+
+## Low vs High CRP samples baseline
 
 Here we compare the baseline samples of patients with low CRP to high CRP.
 
-```{r,dm6}
-name="t0_crp_in"
-sample.annotation3$timepoint <- factor(as.numeric(grepl("POD",sample.annotation3$Sample_Name)))
+```{r,dm9}
+name="t0_crp_in_blood"
 sample.annotation4 <- sample.annotation3[sample.annotation3$timepoint==0,]
 Mval4 <- Mval3[,which(colnames(Mval3) %in% sample.annotation4$Sample_Name)]
 crpgrp <- factor(sample.annotation4$CrpGroup,levels=c(0,1))
@@ -323,7 +416,8 @@ fit.reduced <- eBayes(fit.reduced)
 summary(decideTests(fit.reduced))
 dm <- topTable(fit.reduced,coef=4, number = Inf)
 dma <- merge(myann,dm,by=0)
-head(dma)
+dma <- dma[order(dma$P.Value),]
+head(dma,10)
 dm_up <- rownames(subset(dm,adj.P.Val<0.05 & logFC>0))
 dm_dn <- rownames(subset(dm,adj.P.Val<0.05 & logFC<0))
 length(dm_up)
@@ -339,8 +433,8 @@ t0_crp_in <- list("dma"=dma, "dm_up"=dm_up, "dm_dn"=dm_dn, "confects"=confects)
 
 Here we compare pre-op samples to post-op samples, excluding X and Y chromosomes.
 
-```{r,dm7}
-name="t0vPod_ex"
+```{r,dm10}
+name="t0vPod_ex_blood"
 cgx<-rownames(Locations[which(Locations$chr %in% "chrX"),])
 cgy<-rownames(Locations[which(Locations$chr %in% "chrY"),])
 cgxy<-union(cgx,cgy)
@@ -354,7 +448,8 @@ fit.reduced <- eBayes(fit.reduced)
 summary(decideTests(fit.reduced))
 dm <- topTable(fit.reduced,coef=4, number = Inf)
 dma <- merge(myann,dm,by=0)
-head(dma)
+dma <- dma[order(dma$P.Value),]
+head(dma,10)
 dm_up <- rownames(subset(dm,adj.P.Val<0.05 & logFC>0))
 dm_dn <- rownames(subset(dm,adj.P.Val<0.05 & logFC<0))
 length(dm_up)
@@ -364,12 +459,42 @@ make_dm_plots(dm = dm ,name=name , mx=beta, groups=timepoint, confects=confects)
 t0vPod_ex <- list("dma"=dma, "dm_up"=dm_up, "dm_dn"=dm_dn, "confects"=confects)
 ```
 
+
+## Low vs High CRP samples post-op
+
+Here we compare the post-op samples of patients with low CRP to high CRP excluding sex chromosomes.
+
+```{r,dm11}
+name="t1_crp_ex_blood"
+sample.annotation4 <- sample.annotation3[sample.annotation3$timepoint==1,]
+Mval6 <- Mval3[,which(colnames(Mval3) %in% sample.annotation4$Sample_Name)]
+Mval6 <- Mval6[which(!rownames(Mval6) %in% cgxy),]
+crpgrp <- factor(sample.annotation4$CrpGroup,levels=c(0,1))
+age <- sample.annotation4$age
+malemeth <- factor(sample.annotation4$malemeth)
+design <- model.matrix(~age + malemeth + crpgrp)
+fit.reduced <- lmFit(Mval6,design)
+fit.reduced <- eBayes(fit.reduced)
+summary(decideTests(fit.reduced))
+dm <- topTable(fit.reduced,coef=4, number = Inf)
+dma <- merge(myann,dm,by=0)
+dma <- dma[order(dma$P.Value),]
+head(dma,10)
+dm_up <- rownames(subset(dm,adj.P.Val<0.05 & logFC>0))
+dm_dn <- rownames(subset(dm,adj.P.Val<0.05 & logFC<0))
+length(dm_up)
+length(dm_dn)
+confects <- limma_confects(fit.reduced, coef=4, fdr=0.05)
+make_dm_plots(dm = dm ,name=name , mx=beta, groups=timepoint, confects=confects)
+t0_crp_ex <- list("dma"=dma, "dm_up"=dm_up, "dm_dn"=dm_dn, "confects"=confects)
+```
+
 ## Low vs High CRP samples
 
-Here we compare pre-op samples to post-op samples, excluding X and Y chromosomes.
+Here we compare the baseline samples of patients with low CRP to high CRP excluding sex chromosomes.
 
-```{r,dm8}
-name="t0_crp_ex"
+```{r,dm12}
+name="t0_crp_ex_blood"
 sample.annotation4 <- sample.annotation3[sample.annotation3$timepoint==0,]
 Mval6 <- Mval3[,which(colnames(Mval3) %in% sample.annotation4$Sample_Name)]
 Mval6 <- Mval6[which(!rownames(Mval6) %in% cgxy),]
@@ -382,7 +507,8 @@ fit.reduced <- eBayes(fit.reduced)
 summary(decideTests(fit.reduced))
 dm <- topTable(fit.reduced,coef=4, number = Inf)
 dma <- merge(myann,dm,by=0)
-head(dma)
+dma <- dma[order(dma$P.Value),]
+head(dma,10)
 dm_up <- rownames(subset(dm,adj.P.Val<0.05 & logFC>0))
 dm_dn <- rownames(subset(dm,adj.P.Val<0.05 & logFC<0))
 length(dm_up)
@@ -391,5 +517,3 @@ confects <- limma_confects(fit.reduced, coef=4, fdr=0.05)
 make_dm_plots(dm = dm ,name=name , mx=beta, groups=timepoint, confects=confects)
 t0_crp_ex <- list("dma"=dma, "dm_up"=dm_up, "dm_dn"=dm_dn, "confects"=confects)
 ```
-
-
