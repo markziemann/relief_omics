@@ -1,13 +1,13 @@
 ---
-title: "RELEIF: RNA expression analysis"
+title: "RELIEF: RNA expression analysis"
 author: "Mark Ziemann"
 date: "`r Sys.Date()`"
 output:
   html_document:
     toc: true
+    fig_width: 7
+    fig_height: 7
 theme: cosmo
-fig_width: 7
-fig_height: 7
 ---
 
 # Introduction
@@ -22,6 +22,8 @@ suppressPackageStartupMessages({
     library("DESeq2")
     library("gplots")
     library("fgsea")
+    library("MASS")
+    library("mitch")
 })
 ```
 
@@ -44,6 +46,10 @@ xx <- round(xx)
 
 # curate the samplesheet
 
+Here we're manipulating the sample sheet.
+Making sure that the samplesheet matches the names of the data sets and vice versa.
+Ensuring that each patient has a baseline and postop sample.
+
 ```{r,samplesheet}
 samplesheet<-read.csv("samplesheet.tsv",sep="\t",stringsAsFactors=FALSE)
 mysamples <- colnames(xx)
@@ -52,8 +58,9 @@ postop <- mysamples[grep("POD",mysamples)]
 baseline <- sapply(strsplit(baseline,"-"),"[[",1)
 postop <- sapply(strsplit(postop,"-"),"[[",1)
 mysamples <- intersect(baseline,postop)
+samplesheet2 <- samplesheet
 rownames(samplesheet2) <- paste(samplesheet2$RG_number,"T0",sep="-")
-samplesheet3 <-samplesheet2
+samplesheet3 <- samplesheet2
 rownames(samplesheet2) <- paste(samplesheet2$RG_number,"T0",sep="-")
 rownames(samplesheet3) <- paste(samplesheet2$RG_number,"POD",sep="-")
 samplesheet2$timepoint <- 0       
@@ -63,49 +70,113 @@ samplesheet <- rbind(samplesheet2,samplesheet3)
 # filter the data matrix
 xx <- xx[,which(colnames(xx) %in% rownames(samplesheet))]
 samplesheet <- samplesheet[which(rownames(samplesheet) %in% colnames(xx)),]
+samplesheet <- samplesheet[order(rownames(samplesheet)),]
 ```
 
+# Blood cell composition correction
 
-# Prediction of sex
+Here the idea is to use the concept of Monaco et al, 2019 to deconvolute blood RNA-seq signature.
 
-Is based on expression of XIST. High expression indicates female.
+DOI:https://doi.org/10.1016/j.celrep.2019.01.041
 
-```{r,sexpred}
-xx2 <- xx
-xx2 <- xx2/colSums(xx2)*1000000
 
-rownames(xx2) <- sapply(strsplit(rownames(xx)," "),"[[",1)
-chr <- read.table("../refgenome/chromosomes.tsv",row.names=1)
-xx2 <- merge(chr,xx2,by=0)
-rownames(xx2) <- xx2$Row.names
-xx2$Row.names = NULL
+```{r,blood}
+xn <- xx
+gt <- as.data.frame(sapply(strsplit(rownames(xn)," "),"[[",2) )
+rownames(gt) <- rownames(xx)
+colnames(gt) = "genesymbol"
+gt$geneID <- rownames(xx)
+blood <- read.table("https://raw.githubusercontent.com/giannimonaco/ABIS/master/data/sigmatrixRNAseq.txt")
+blood2 <- merge(gt,blood,by.x="genesymbol",by.y=0)
+blood2 <- blood2[which(!duplicated(blood2$genesymbol)),]
+rownames(blood2) <- blood2$geneID
+blood2 <- blood2[,c(3:ncol(blood2))]
+genes <- intersect(rownames(xx), rownames(blood2))
+dec <- apply(xx[genes, , drop=F], 2, function(x) coef(rlm( as.matrix(blood2[genes,]), x, maxit =100 ))) *100
 
-xx3 <- aggregate(. ~ V2,xx2,sum)
-rownames(xx3) <- xx3$V2
-xx3$V2=NULL
+dec <- t(dec/colSums(dec)*100)
+
+dec <- signif(dec, 3)
+
+cs <- colSums(dec)
+order(-cs)
+
+cv <- apply(dec,2,function(x) {sd(x)/mean(x)} )
+cv[order(-cv)]
+
+plot(cs,cv,main="cell abundance versus SD")
+text(cs,cv+0.5,label=names(cs))
 
 colfunc <- colorRampPalette(c("blue", "white", "red"))
 
-heatmap.2( as.matrix(xx3), col=colfunc(25),scale="row",
- trace="none",margins = c(10,15), cexRow=.7, cexCol=.8,  main="Gene Expression by Chromosomes")
+heatmap.2( dec, col=colfunc(25),scale="row",
+ trace="none",margins = c(10,15), cexRow=.7, cexCol=.8,  main="cell type abundances")
 
-xx2 <- xx/colSums(xx)*1000000
-XIST <- grep( "XIST" , rownames(xx2))
-XIST <- xx2[XIST,]
-XIST <- as.vector(t(XIST))
-names(XIST) <- colnames(xx2)
+samplesheet <- cbind(samplesheet,dec)
 
-par(mai=c(0.5,2,0.5,1))
-barplot(XIST[order(XIST)],horiz=TRUE,las=1,cex.names=0.5,main="XIST expression")
+dec_t0_lo <- as.data.frame(dec[which(rownames(dec) %in% rownames(samplesheet)[which(samplesheet$CrpGroup==0 & samplesheet$timepoint==0 )] ),])
+dec_po_lo <- as.data.frame(dec[which(rownames(dec) %in% rownames(samplesheet)[which(samplesheet$CrpGroup==0 & samplesheet$timepoint==1 )] ),])
+dec_t0_hi <- as.data.frame(dec[which(rownames(dec) %in% rownames(samplesheet)[which(samplesheet$CrpGroup==1 & samplesheet$timepoint==0 )] ),])
+dec_po_hi <- as.data.frame(dec[which(rownames(dec) %in% rownames(samplesheet)[which(samplesheet$CrpGroup==1 & samplesheet$timepoint==1 )] ),])
 
-samplesheet <- samplesheet[order(rownames(samplesheet)),]
-samplesheet$male <- as.numeric(XIST<10)
 
-# SRY is not expressed
-SRY <- grep( "SRY" , rownames(xx2))
-SRY <- xx2[SRY,]
-SRY <- as.vector(t(SRY))
-names(SRY) <- colnames(SRY)
+boxplot(dec_t0_lo$Monocytes.C , dec_t0_hi$Monocytes.C, dec_po_lo$Monocytes.C,  dec_po_hi$Monocytes.C ,
+  ylim=c(0,100),names=c("t0 lo","t0 hi","po lo","po hi"),main="Monocytes.C")
+t.test(dec_t0_hi$Monocytes.C , dec_po_hi$Monocytes.C)
+
+boxplot(dec_t0_lo$NK , dec_t0_hi$NK, dec_po_lo$NK,  dec_po_hi$NK ,
+  ylim=c(0,15),names=c("t0 lo","t0 hi","po lo","po hi"),main="NK")
+t.test(dec_t0_lo$NK , dec_po_lo$NK)
+
+boxplot(dec_t0_lo$T.CD8.Memory , dec_t0_hi$T.CD8.Memory, dec_po_lo$T.CD8.Memory,  dec_po_hi$T.CD8.Memory ,
+  ylim=c(0,40),names=c("t0 lo","t0 hi","po lo","po hi"),main="T.CD8.Memory")
+
+boxplot(dec_t0_lo$T.CD8.Memory , dec_t0_hi$T.CD8.Memory, dec_po_lo$T.CD8.Memory,  dec_po_hi$T.CD8.Memory ,
+  ylim=c(0,40),names=c("t0 lo","t0 hi","po lo","po hi"),main="T.CD8.Memory")
+
+boxplot(dec_t0_lo$T.CD4.Naive , dec_t0_hi$T.CD4.Naive, dec_po_lo$T.CD4.Naive,  dec_po_hi$T.CD4.Naive ,
+  ylim=c(0,25),names=c("t0 lo","t0 hi","po lo","po hi"),main="T.CD4.Naive")
+
+boxplot(dec_t0_lo$T.CD8.Naive , dec_t0_hi$T.CD8.Naive, dec_po_lo$T.CD8.Naive,  dec_po_hi$T.CD8.Naive ,
+  ylim=c(0,15),names=c("t0 lo","t0 hi","po lo","po hi"),main="T.CD8.Naive")
+
+boxplot(dec_t0_lo$B.Naive , dec_t0_hi$B.Naive, dec_po_lo$B.Naive,  dec_po_hi$B.Naive ,
+  ylim=c(0,10),names=c("t0 lo","t0 hi","po lo","po hi"),main="B.Naive")
+
+boxplot(dec_t0_lo$T.CD4.Memory , dec_t0_hi$T.CD4.Memory, dec_po_lo$T.CD4.Memory,  dec_po_hi$T.CD4.Memory ,
+  ylim=c(0,10),names=c("t0 lo","t0 hi","po lo","po hi"),main="T.CD4.Memory")
+
+boxplot(dec_t0_lo$MAIT , dec_t0_hi$MAIT, dec_po_lo$MAIT,  dec_po_hi$MAIT ,
+  ylim=c(0,15),names=c("t0 lo","t0 hi","po lo","po hi"),main="MAIT")
+
+boxplot(dec_t0_lo$T.gd.Vd2 , dec_t0_hi$T.gd.Vd2 , dec_po_lo$T.gd.Vd2 ,  dec_po_hi$T.gd.Vd2 ,
+  ylim=c(0,5),names=c("t0 lo","t0 hi","po lo","po hi"),main="T.gd.Vd2")
+
+boxplot(dec_t0_lo$Neutrophils.LD , dec_t0_hi$Neutrophils.LD , dec_po_lo$Neutrophils.LD ,  dec_po_hi$Neutrophils.LD ,
+  ylim=c(0,50),names=c("t0 lo","t0 hi","po lo","po hi"),main="Neutrophils.LD")
+
+boxplot(dec_t0_lo$T.gd.non.Vd2 , dec_t0_hi$T.gd.non.Vd2 , dec_po_lo$T.gd.non.Vd2 ,  dec_po_hi$T.gd.non.Vd2 ,
+  ylim=c(0,1),names=c("t0 lo","t0 hi","po lo","po hi"),main="T.gd.non.Vd2")
+
+boxplot(dec_t0_lo$Basophils.LD , dec_t0_hi$Basophils.LD , dec_po_lo$Basophils.LD ,  dec_po_hi$Basophils.LD ,
+  ylim=c(0,4),names=c("t0 lo","t0 hi","po lo","po hi"),main="Basophils.LD")
+
+boxplot(dec_t0_lo$Monocytes.NC.I , dec_t0_hi$Monocytes.NC.I , dec_po_lo$Monocytes.NC.I ,  dec_po_hi$Monocytes.NC.I ,
+  ylim=c(0,20),names=c("t0 lo","t0 hi","po lo","po hi"),main="Monocytes.NC.I")
+
+boxplot(dec_t0_lo$B.Memory , dec_t0_hi$B.Memory , dec_po_lo$B.Memory ,  dec_po_hi$B.Memory ,
+  ylim=c(0,20),names=c("t0 lo","t0 hi","po lo","po hi"),main="B.Memory")
+
+boxplot(dec_t0_lo$mDCs , dec_t0_hi$mDCs , dec_po_lo$mDCs ,  dec_po_hi$mDCs ,
+  ylim=c(0,1),names=c("t0 lo","t0 hi","po lo","po hi"),main="mDCs")
+
+boxplot(dec_t0_lo$pDCs , dec_t0_hi$pDCs , dec_po_lo$pDCs ,  dec_po_hi$pDCs ,
+  ylim=c(0,1),names=c("t0 lo","t0 hi","po lo","po hi"),main="pDCs")
+
+boxplot(dec_t0_lo$Plasmablasts , dec_t0_hi$Plasmablasts , dec_po_lo$Plasmablasts ,  dec_po_hi$Plasmablasts ,
+  ylim=c(0,1),names=c("t0 lo","t0 hi","po lo","po hi"),main="Plasmablasts")
+
+
 ```
 
 # MDS analysis
@@ -124,14 +195,42 @@ heatmap.2(cor(xx,method="s"),trace="none",margins = c(10,10), main="spearman cor
 ```{r,de1}
 # filter genes with fewer than 10 reads per sample
 NAME = "t0_v_pod"
+
+# no correction for cell types
 y <- xx[which(rowSums(xx)/ncol(xx)>=(10)),]
-dds <- DESeqDataSetFromMatrix(countData = y , colData = samplesheet, design = ~ male + timepoint )
+dds <- DESeqDataSetFromMatrix(countData = y , colData = samplesheet,
+  design = ~ Sex + timepoint )
 res <- DESeq(dds)
 z <- results(res)
 vsd <- vst(dds, blind=FALSE)
 zz <-cbind(as.data.frame(z),assay(vsd))
 dge <- as.data.frame(zz[order(zz$pvalue),])
 dge[1:10,1:6]
+sig <- subset(dge,padj<0.05)
+SIG = nrow(sig)
+DN = nrow(subset(sig,log2FoldChange<0))
+UP = nrow(subset(sig,log2FoldChange>0))
+HEADER = paste(NAME, SIG , "DGEs,", UP ,"upregulated,", DN, "downregulated")
+# smear
+plot(log2(dge$baseMean),dge$log2FoldChange,cex=0.6,cex.axis=1.2,cex.lab=1.3, xlab="log2 base mean",
+  ylim=c(-3,3),ylab="log2 fold change" ,pch=19,col="#838383")
+points(log2(sig$baseMean),sig$log2FoldChange,cex=0.6,pch=19,col="red")
+mtext((HEADER),cex=1.2)
+t0_v_pod <- dge
+
+# correct for cell types
+y <- xx[which(rowSums(xx)/ncol(xx)>=(10)),]
+dds <- DESeqDataSetFromMatrix(countData = y , colData = samplesheet, 
+  design = ~ Sex + Monocytes.C + NK + T.CD8.Memory + T.CD4.Naive + T.CD8.Naive +
+  B.Naive + T.CD4.Memory + MAIT + T.gd.Vd2 + Neutrophils.LD + T.gd.non.Vd2 +
+  Basophils.LD + Monocytes.NC.I + B.Memory + mDCs + pDCs + Plasmablasts + timepoint )
+res <- DESeq(dds)
+z <- results(res)
+vsd <- vst(dds, blind=FALSE)
+zz <-cbind(as.data.frame(z),assay(vsd))
+dge <- as.data.frame(zz[order(zz$pvalue),])
+dge[1:10,1:6]
+
 sig <- subset(dge,padj<0.05)
 SIG = nrow(sig)
 DN = nrow(subset(sig,log2FoldChange<0))
@@ -152,7 +251,7 @@ mtext((HEADER),cex=1.2)
 colfunc <- colorRampPalette(c("blue", "white", "red"))
 heatmap.2(  as.matrix(dge[1:50,c(7:ncol(dge))]), col=colfunc(25),scale="row",
  trace="none",margins = c(6,10), cexRow=.6, cexCol=.5, main="Top 50 genes")
-t0_v_pod <- dge
+#t0_v_pod <- dge
 ```
 
 # DE analysis post-op low versus high CRP
@@ -163,7 +262,7 @@ NAME = "pod_crp"
 ss <- subset(samplesheet,timepoint==1)
 xxx <- xx[,colnames(xx) %in% rownames(ss)]
 y <- xxx[which(rowSums(xxx)/ncol(xxx)>=(10)),]
-dds <- DESeqDataSetFromMatrix(countData = y , colData = ss, design = ~ male + CrpGroup )
+dds <- DESeqDataSetFromMatrix(countData = y , colData = ss, design = ~ Sex + CrpGroup )
 res <- DESeq(dds)
 z <- results(res)
 vsd <- vst(dds, blind=FALSE)
@@ -202,7 +301,7 @@ NAME = "t0_crp"
 ss <- subset(samplesheet,timepoint==0)
 xxx <- xx[,colnames(xx) %in% rownames(ss)]
 y <- xxx[which(rowSums(xxx)/ncol(xxx)>=(10)),]
-dds <- DESeqDataSetFromMatrix(countData = y , colData = ss, design = ~ male + CrpGroup )
+dds <- DESeqDataSetFromMatrix(countData = y , colData = ss, design = ~ Sex + CrpGroup )
 res <- DESeq(dds)
 z <- results(res)
 vsd <- vst(dds, blind=FALSE)
@@ -230,5 +329,92 @@ colfunc <- colorRampPalette(c("blue", "white", "red"))
 heatmap.2(  as.matrix(dge[1:50,c(7:ncol(dge))]), col=colfunc(25),scale="row",
  trace="none",margins = c(6,10), cexRow=.6, cexCol=.5, main="Top 50 genes")
 t0_crp <- dge
+```
+
+## One dimensional enrichment analysis
+
+Not correcting for blood compostion changes.
+
+```{r,1dpw, message = FALSE}
+# reactome
+download.file("https://reactome.org/download/current/ReactomePathways.gmt.zip", destfile="ReactomePathways.gmt.zip")
+unzip("ReactomePathways.gmt.zip")
+genesets <- gmt_import("ReactomePathways.gmt")
+
+# set up the gene table
+gt <- as.data.frame(sapply(strsplit(rownames(xx)," "),"[[",2))
+gt$id <- rownames(xx)
+colnames(gt) <- c("gene name","id")
+
+
+# t0_v_pod
+# baseline versus post-op
+y <- mitch_import(t0_v_pod, DEtype="DESeq2", geneTable=gt)
+suppressMessages(res <- mitch_calc(y, genesets, priority="significance",resrows=100))
+head(res$enrichment_result,20)
+unlink("t0_v_pod_mitch.html")
+mitch_report(res, "t0_v_pod_mitch.html")
+
+# pod_crp
+# postop low versus high CRP
+y <- mitch_import(pod_crp, DEtype="DESeq2", geneTable=gt)
+res <- mitch_calc(y, genesets, priority="significance",resrows=100)
+head(res$enrichment_result,20)
+unlink("pod_crp_mitch.html")
+mitch_report(res, "pod_crp_mitch.html")
+
+
+# t0_crp
+# baseline low versus high CRP
+y <- mitch_import(t0_crp, DEtype="DESeq2", geneTable=gt)
+invisible(res <- mitch_calc(y, genesets, priority="significance",resrows=100))
+head(res$enrichment_result,20)
+unlink("t0_crp_mitch.html")
+mitch_report(res, "t0_crp_mitch.html")
+
+
+## prioritise by effect size
+
+# t0_v_pod
+# baseline versus post-op
+y <- mitch_import(t0_v_pod, DEtype="DESeq2", geneTable=gt)
+invisible(res <- mitch_calc(y, genesets, priority="effect",resrows=100))
+head(res$enrichment_result,20)
+unlink("t0_v_pod_mitche.html")
+mitch_report(res, "t0_v_pod_mitche.html")
+
+
+# pod_crp
+# postop low versus high CRP
+y <- mitch_import(pod_crp, DEtype="DESeq2", geneTable=gt)
+invisible(res <- mitch_calc(y, genesets, priority="effect",resrows=100))
+head(res$enrichment_result,20)
+unlink("pod_crp_mitche.html")
+mitch_report(res, "pod_crp_mitche.html")
+
+
+# t0_crp
+# baseline low versus high CRP
+y <- mitch_import(t0_crp, DEtype="DESeq2", geneTable=gt)
+invisible(res <- mitch_calc(y, genesets, priority="effect",resrows=100))
+head(res$enrichment_result,20)
+unlink("t0_crp_mitche.html")
+mitch_report(res, "t0_crp_mitche.html")
+
+
+# 3D analysys significance
+z <- list("t0_v_pod"=t0_v_pod, "pod_crp"=pod_crp, "t0_crp"=t0_crp)
+zz <- mitch_import(z, DEtype="DESeq2", geneTable=gt)
+invisible(res <- mitch_calc(zz, genesets, priority="significance",resrows=100))
+head(res$enrichment_result,20)
+unlink("3d_mitch.html")
+mitch_report(res, "3d_mitch.html")
+
+# 3D analysys effect size
+invisible(res <- mitch_calc(zz, genesets, priority="effect",resrows=100))
+head(res$enrichment_result,20)
+unlink("3d_mitche.html")
+mitch_report(res, "3d_mitche.html")
+
 ```
 
