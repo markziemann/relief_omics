@@ -350,27 +350,44 @@ colnames(gt) <- c("gene name","id")
 # t0_v_pod
 # baseline versus post-op
 y <- mitch_import(t0_v_pod, DEtype="DESeq2", geneTable=gt)
-suppressMessages(res <- mitch_calc(y, genesets, priority="significance",resrows=100))
+capture.output( 
+    res <- mitch_calc(y, genesets, priority="significance",resrows=100) 
+    , file = "/dev/null", append = FALSE,
+    type = c("output", "message"), split = FALSE)
 head(res$enrichment_result,20)
 unlink("t0_v_pod_mitch.html")
-mitch_report(res, "t0_v_pod_mitch.html")
+capture.output(
+    mitch_report(res, "t0_v_pod_mitch.html")
+    , file = "/dev/null", append = FALSE,
+    type = c("output", "message"), split = FALSE)
 
 # pod_crp
 # postop low versus high CRP
 y <- mitch_import(pod_crp, DEtype="DESeq2", geneTable=gt)
-res <- mitch_calc(y, genesets, priority="significance",resrows=100)
+capture.output( 
+    res <- mitch_calc(y, genesets, priority="significance",resrows=100)
+    , file = "/dev/null", append = FALSE,
+    type = c("output", "message"), split = FALSE)
 head(res$enrichment_result,20)
 unlink("pod_crp_mitch.html")
-mitch_report(res, "pod_crp_mitch.html")
-
+capture.output(
+    mitch_report(res, "pod_crp_mitch.html")
+    , file = "/dev/null", append = FALSE,
+    type = c("output", "message"), split = FALSE)
 
 # t0_crp
 # baseline low versus high CRP
 y <- mitch_import(t0_crp, DEtype="DESeq2", geneTable=gt)
-invisible(res <- mitch_calc(y, genesets, priority="significance",resrows=100))
+capture.output(
+    res <- mitch_calc(y, genesets, priority="significance",resrows=100)
+    , file = "/dev/null", append = FALSE,
+    type = c("output", "message"), split = FALSE)
 head(res$enrichment_result,20)
 unlink("t0_crp_mitch.html")
-mitch_report(res, "t0_crp_mitch.html")
+capture.output(
+    mitch_report(res, "t0_crp_mitch.html")
+    , file = "/dev/null", append = FALSE,
+    type = c("output", "message"), split = FALSE)
 
 
 ## prioritise by effect size
@@ -378,43 +395,73 @@ mitch_report(res, "t0_crp_mitch.html")
 # t0_v_pod
 # baseline versus post-op
 y <- mitch_import(t0_v_pod, DEtype="DESeq2", geneTable=gt)
-invisible(res <- mitch_calc(y, genesets, priority="effect",resrows=100))
+capture.output(
+    res <- mitch_calc(y, genesets, priority="effect",resrows=100)
+    , file = "/dev/null", append = FALSE,
+    type = c("output", "message"), split = FALSE)
 head(res$enrichment_result,20)
 unlink("t0_v_pod_mitche.html")
-mitch_report(res, "t0_v_pod_mitche.html")
+capture.output(
+    mitch_report(res, "t0_v_pod_mitche.html")
+    , file = "/dev/null", append = FALSE,
+    type = c("output", "message"), split = FALSE)
 
 
 # pod_crp
 # postop low versus high CRP
 y <- mitch_import(pod_crp, DEtype="DESeq2", geneTable=gt)
-invisible(res <- mitch_calc(y, genesets, priority="effect",resrows=100))
+capture.output(
+    res <- mitch_calc(y, genesets, priority="effect",resrows=100)
+    , file = "/dev/null", append = FALSE,
+    type = c("output", "message"), split = FALSE)
 head(res$enrichment_result,20)
 unlink("pod_crp_mitche.html")
-mitch_report(res, "pod_crp_mitche.html")
+capture.output(
+    mitch_report(res, "pod_crp_mitche.html")
+    , file = "/dev/null", append = FALSE,
+    type = c("output", "message"), split = FALSE)
 
 
 # t0_crp
 # baseline low versus high CRP
 y <- mitch_import(t0_crp, DEtype="DESeq2", geneTable=gt)
-invisible(res <- mitch_calc(y, genesets, priority="effect",resrows=100))
+capture.output(
+    res <- mitch_calc(y, genesets, priority="effect",resrows=100)
+    , file = "/dev/null", append = FALSE,
+    type = c("output", "message"), split = FALSE)
 head(res$enrichment_result,20)
 unlink("t0_crp_mitche.html")
-mitch_report(res, "t0_crp_mitche.html")
+capture.output(
+    mitch_report(res, "t0_crp_mitche.html")
+    , file = "/dev/null", append = FALSE,
+    type = c("output", "message"), split = FALSE)
 
 
 # 3D analysys significance
 z <- list("t0_v_pod"=t0_v_pod, "pod_crp"=pod_crp, "t0_crp"=t0_crp)
 zz <- mitch_import(z, DEtype="DESeq2", geneTable=gt)
-invisible(res <- mitch_calc(zz, genesets, priority="significance",resrows=100))
+capture.output(
+    res <- mitch_calc(zz, genesets, priority="significance",resrows=100)
+    , file = "/dev/null", append = FALSE,
+    type = c("output", "message"), split = FALSE)
 head(res$enrichment_result,20)
 unlink("3d_mitch.html")
-mitch_report(res, "3d_mitch.html")
+capture.output(
+    mitch_report(res, "3d_mitch.html")
+    , file = "/dev/null", append = FALSE,
+    type = c("output", "message"), split = FALSE)
 
 # 3D analysys effect size
-invisible(res <- mitch_calc(zz, genesets, priority="effect",resrows=100))
+capture.output(
+    res <- mitch_calc(zz, genesets, priority="effect",resrows=100)
+    , file = "/dev/null", append = FALSE,
+    type = c("output", "message"), split = FALSE)
 head(res$enrichment_result,20)
 unlink("3d_mitche.html")
-mitch_report(res, "3d_mitche.html")
+capture.output(
+    mitch_report(res, "3d_mitche.html")
+    , file = "/dev/null", append = FALSE,
+    type = c("output", "message"), split = FALSE)
 
 ```
 
