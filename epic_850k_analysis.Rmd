@@ -5,9 +5,9 @@ date: "`r Sys.Date()`"
 output:
   html_document:
     toc: true
+    fig_width: 7
+    fig_height: 7
 theme: cosmo
-fig_width: 7
-fig_height: 7 
 ---
 
 ## Introduction
@@ -36,6 +36,7 @@ suppressPackageStartupMessages({
     library("gplots")
     library("topconfects")
     library("FlowSorted.Blood.EPIC")
+    library("mitch")
 })
 data(Locations)
 source("epic_850k_functions.R")
@@ -48,8 +49,13 @@ source("epic_850k_functions.R")
 anno <- getAnnotation(IlluminaHumanMethylationEPICanno.ilm10b4.hg19)
 myann <- data.frame(anno[,c("UCSC_RefGene_Name","Regulatory_Feature_Group")])
 ```
-
-
+# Obtain reactome gene sets
+```{r,genesets}
+download.file("https://reactome.org/download/current/ReactomePathways.gmt.zip", 
+    destfile="ReactomePathways.gmt.zip")
+unzip("ReactomePathways.gmt.zip",overwrite = TRUE)
+genesets <- gmt_import("ReactomePathways.gmt")
+```
 # Curate metadata
 
 ```{r,metadata}
@@ -369,7 +375,7 @@ length(dm_up)
 length(dm_dn)
 confects <- limma_confects(fit.reduced, coef=4, fdr=0.05)
 make_dm_plots(dm = dm ,name=name , mx=beta, groups=timepoint, confects=confects)
-t0vPod_in <- list("dma"=dma, "dm_up"=dm_up, "dm_dn"=dm_dn, "confects"=confects)
+t0vPod_in_blood <- list("dma"=dma, "dm_up"=dm_up, "dm_dn"=dm_dn, "confects"=confects)
 ```
 
 ## Low vs High CRP samples post-op
@@ -397,7 +403,7 @@ length(dm_up)
 length(dm_dn)
 confects <- limma_confects(fit.reduced, coef=4, fdr=0.05)
 make_dm_plots(dm = dm ,name=name , mx=beta, groups=timepoint, confects=confects)
-t0_crp_in <- list("dma"=dma, "dm_up"=dm_up, "dm_dn"=dm_dn, "confects"=confects)
+t0_crp_in_blood <- list("dma"=dma, "dm_up"=dm_up, "dm_dn"=dm_dn, "confects"=confects)
 ```
 
 
@@ -426,7 +432,7 @@ length(dm_up)
 length(dm_dn)
 confects <- limma_confects(fit.reduced, coef=4, fdr=0.05)
 make_dm_plots(dm = dm ,name=name , mx=beta, groups=timepoint, confects=confects)
-t0_crp_in <- list("dma"=dma, "dm_up"=dm_up, "dm_dn"=dm_dn, "confects"=confects)
+t0_crp_in_blood <- list("dma"=dma, "dm_up"=dm_up, "dm_dn"=dm_dn, "confects"=confects)
 ```
 
 # Differential analysis excluding sex chromosomes
@@ -458,7 +464,28 @@ length(dm_up)
 length(dm_dn)
 confects <- limma_confects(fit.reduced, coef=4, fdr=0.05)
 make_dm_plots(dm = dm ,name=name , mx=beta, groups=timepoint, confects=confects)
-t0vPod_ex <- list("dma"=dma, "dm_up"=dm_up, "dm_dn"=dm_dn, "confects"=confects)
+t0vPod_ex_blood <- list("dma"=dma, "dm_up"=dm_up, "dm_dn"=dm_dn, "confects"=confects)
+
+# pathway
+dmap <- dma[grep("Promoter_Associated",dma$Regulatory_Feature_Group),]
+dmap[which(dmap$UCSC_RefGene_Name==""),2] <- "NA"
+dmap$genename <- sapply(strsplit(dmap$UCSC_RefGene_Name,";"),"[[",1)
+dmap2 <- dmap[,c("genename","t")]
+rank <- aggregate(. ~ genename,dmap2,mean)
+rownames(rank) <- rank$genename
+rank$genename=NULL
+write.table(rank,file="t0vPod_meth.tsv",sep="\t",quote=FALSE)
+capture.output(
+    res <- mitch_calc(x = rank,genesets = genesets, priority = "significance",resrows=20)
+    , file = "/dev/null", append = FALSE,
+    type = c("output", "message"), split = FALSE)
+head(res$enrichment_result,20)
+unlink("t0vPod_ex_blood.html")
+capture.output(
+    mitch_plots(res,outfile="t0vPod_ex_blood.pdf")
+    , file = "/dev/null", append = FALSE,
+    type = c("output", "message"), split = FALSE)
+
 ```
 
 
@@ -488,7 +515,27 @@ length(dm_up)
 length(dm_dn)
 confects <- limma_confects(fit.reduced, coef=4, fdr=0.05)
 make_dm_plots(dm = dm ,name=name , mx=beta, groups=timepoint, confects=confects)
-t0_crp_ex <- list("dma"=dma, "dm_up"=dm_up, "dm_dn"=dm_dn, "confects"=confects)
+t1_crp_ex_blood <- list("dma"=dma, "dm_up"=dm_up, "dm_dn"=dm_dn, "confects"=confects)
+
+# pathway
+dmap <- dma[grep("Promoter_Associated",dma$Regulatory_Feature_Group),]
+dmap[which(dmap$UCSC_RefGene_Name==""),2] <- "NA"
+dmap$genename <- sapply(strsplit(dmap$UCSC_RefGene_Name,";"),"[[",1)
+dmap2 <- dmap[,c("genename","t")]
+rank <- aggregate(. ~ genename,dmap2,mean)
+rownames(rank) <- rank$genename
+rank$genename=NULL
+write.table(rank,file="t1_crp_meth.tsv",sep="\t",quote=FALSE)
+capture.output( 
+    res <- mitch_calc(x = rank,genesets = genesets, priority = "significance",resrows=20)
+    , file = "/dev/null", append = FALSE,
+    type = c("output", "message"), split = FALSE)
+head(res$enrichment_result,20)
+unlink("t1_crp_ex_blood.html")
+capture.output( 
+    mitch_plots(res,outfile="t1_crp_ex_blood.pdf")
+    , file = "/dev/null", append = FALSE,
+    type = c("output", "message"), split = FALSE)
 ```
 
 ## Low vs High CRP samples
@@ -517,5 +564,26 @@ length(dm_up)
 length(dm_dn)
 confects <- limma_confects(fit.reduced, coef=4, fdr=0.05)
 make_dm_plots(dm = dm ,name=name , mx=beta, groups=timepoint, confects=confects)
-t0_crp_ex <- list("dma"=dma, "dm_up"=dm_up, "dm_dn"=dm_dn, "confects"=confects)
+t0_crp_ex_blood <- list("dma"=dma, "dm_up"=dm_up, "dm_dn"=dm_dn, "confects"=confects)
+
+# pathway
+dmap <- dma[grep("Promoter_Associated",dma$Regulatory_Feature_Group),]
+dmap[which(dmap$UCSC_RefGene_Name==""),2] <- "NA"
+dmap$genename <- sapply(strsplit(dmap$UCSC_RefGene_Name,";"),"[[",1)
+dmap2 <- dmap[,c("genename","t")]
+rank <- aggregate(. ~ genename,dmap2,mean)
+rownames(rank) <- rank$genename
+rank$genename=NULL
+write.table(rank,file="t0_crp_meth.tsv",sep="\t",quote=FALSE)
+capture.output( 
+    res <- mitch_calc(x = rank,genesets = genesets, priority = "significance",resrows=20)
+    , file = "/dev/null", append = FALSE,
+    type = c("output", "message"), split = FALSE)
+head(res$enrichment_result,20)
+unlink("t0_crp_ex_blood.html")
+capture.output(
+    mitch_plots(res,outfile="t0_crp_ex_blood.pdf")
+    , file = "/dev/null", append = FALSE,
+    type = c("output", "message"), split = FALSE)
+
 ```

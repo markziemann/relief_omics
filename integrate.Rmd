@@ -1,0 +1,179 @@
+---
+title: "RELIEF: integrative analysis"
+author: "Mark Ziemann"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    fig_width: 7
+    fig_height: 7
+theme: cosmo
+---
+
+# Introduction
+
+Here I'm using the new mitch package to compare methylation and RNA expression data from
+the RELIEF patients.
+
+Mitch: https://doi.org/10.1186/s12864-020-06856-9
+
+The contrasts I'm looking at are:
+
+1. Base-line versus post-op for all patients.
+
+2. Low versus high CRP groups in post-op samples.
+
+3. Low versus high CRP groups in base-line samples.
+
+# Packages 
+
+```{r,packages}
+suppressPackageStartupMessages({
+    library("mitch")
+})
+```
+
+# Import read counts
+
+Need to import the data and merge the RNA and array data.
+I notices that only 11370 genes had promoter methylation values, while 21907 had RNA expression values.
+We might need to look at updating the array annotation to include more genes as the array annotation is from ~2014 and might be missing a lot of ncRNA genes.
+
+```{r,importdata}
+# t0_v_pod_rna.tsv t0vPod_meth.tsv t0_v_pod
+x <- read.table("t0_v_pod_rna.tsv",header=TRUE, sep="\t")
+x$gene <- sapply(strsplit(rownames(x)," "),"[[",2)
+x <- x[,c(4,ncol(x))]
+x <- aggregate(. ~ gene, x, sum)
+rownames(x) <- x$gene
+x$gene=NULL
+
+y <- read.csv("t0vPod_meth.tsv")
+y$genename <- sapply(strsplit(y[,1],"\t"),"[[",1)
+y$value <- as.numeric(sapply(strsplit(y[,1],"\t"),"[[",2))
+y$t = NULL
+row.names(y) <- y$genename
+y$t = y$genename = NULL
+
+z <- merge(x,y,by=0)
+rownames(z) <- z$Row.names
+z$Row.names = NULL
+colnames(z) <- c("RNA","meth")
+t0_v_pod <- z
+
+# pod_crp_rna.tsv t1_crp_meth.tsv pod_crp
+x <- read.table("pod_crp_rna.tsv",header=TRUE, sep="\t")
+x$gene <- sapply(strsplit(rownames(x)," "),"[[",2)
+x <- x[,c(4,ncol(x))]
+x <- aggregate(. ~ gene, x, sum)
+rownames(x) <- x$gene
+x$gene=NULL
+
+y <- read.csv("t1_crp_meth.tsv")
+y$genename <- sapply(strsplit(y[,1],"\t"),"[[",1)
+y$value <- as.numeric(sapply(strsplit(y[,1],"\t"),"[[",2))
+y$t = NULL
+row.names(y) <- y$genename
+y$t = y$genename = NULL
+
+z <- merge(x,y,by=0)
+rownames(z) <- z$Row.names
+z$Row.names = NULL
+colnames(z) <- c("RNA","meth")
+pod_crp <- z
+
+# t0_crp_rna.tsv t0_crp_meth.tsv t0_crp
+x <- read.table("t0_crp_rna.tsv",header=TRUE, sep="\t")
+x$gene <- sapply(strsplit(rownames(x)," "),"[[",2)
+x <- x[,c(4,ncol(x))]
+x <- aggregate(. ~ gene, x, sum)
+rownames(x) <- x$gene
+x$gene=NULL
+
+y <- read.csv("t0_crp_meth.tsv")
+y$genename <- sapply(strsplit(y[,1],"\t"),"[[",1)
+y$value <- as.numeric(sapply(strsplit(y[,1],"\t"),"[[",2))
+y$t = NULL
+row.names(y) <- y$genename
+y$t = y$genename = NULL
+
+z <- merge(x,y,by=0)
+rownames(z) <- z$Row.names
+z$Row.names = NULL
+colnames(z) <- c("RNA","meth")
+t0_crp <- z
+
+
+```
+
+## Obtaining reactome gene sets
+
+```{r,reactome}
+download.file("https://reactome.org/download/current/ReactomePathways.gmt.zip", destfile="ReactomePathways.gmt.zip")
+unzip("ReactomePathways.gmt.zip")
+genesets <- gmt_import("ReactomePathways.gmt")
+```
+
+## Integrative pathway analysis
+
+For each of the three contrast indicated above I have set up mitch analyses.
+
+```{r,mitch}
+
+# t0_v_pod
+head(t0_v_pod)
+dim(t0_v_pod)
+
+capture.output(
+    res <- mitch_calc(x=t0_v_pod, genesets=genesets,priority="significance")
+    , file = "/dev/null", append = FALSE,
+    type = c("output", "message"), split = FALSE)
+
+head(res$enrichment_result,30)
+
+unlink("t0_v_pod_int.html")
+capture.output(
+    mitch_report(res, "t0_v_pod_int.html")
+    , file = "/dev/null", append = FALSE,
+    type = c("output", "message"), split = FALSE)
+
+# pod_crp
+head(pod_crp)
+dim(pod_crp)
+
+capture.output(
+    res <- mitch_calc(x=pod_crp, genesets=genesets,priority="significance")
+    , file = "/dev/null", append = FALSE,
+    type = c("output", "message"), split = FALSE)
+
+head(res$enrichment_result,30)
+
+unlink("pod_crp_int.html")
+capture.output(
+    mitch_report(res, "pod_crp_int.html")
+    , file = "/dev/null", append = FALSE,
+    type = c("output", "message"), split = FALSE)
+
+# t0_crp
+head(t0_crp)
+dim(t0_crp)
+
+capture.output(
+    res <- mitch_calc(x=t0_crp, genesets=genesets,priority="significance")
+    , file = "/dev/null", append = FALSE,
+    type = c("output", "message"), split = FALSE)
+
+head(res$enrichment_result,30)
+
+unlink("t0_crp_int.html")
+capture.output(
+    mitch_report(res, "t0_crp_int.html")
+    , file = "/dev/null", append = FALSE,
+    type = c("output", "message"), split = FALSE)
+
+```
+
+## Session information
+```{r,sessioninfo}
+sessionInfo()
+```

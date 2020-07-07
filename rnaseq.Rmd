@@ -217,6 +217,7 @@ plot(log2(dge$baseMean),dge$log2FoldChange,cex=0.6,cex.axis=1.2,cex.lab=1.3, xla
 points(log2(sig$baseMean),sig$log2FoldChange,cex=0.6,pch=19,col="red")
 mtext((HEADER),cex=1.2)
 t0_v_pod <- dge
+write.table(dge,file="t0_v_pod_rna.tsv",sep="\t",quote=FALSE)
 
 # correct for cell types
 y <- xx[which(rowSums(xx)/ncol(xx)>=(10)),]
@@ -290,6 +291,8 @@ colfunc <- colorRampPalette(c("blue", "white", "red"))
 heatmap.2(  as.matrix(dge[1:50,c(7:ncol(dge))]), col=colfunc(25),scale="row",
  trace="none",margins = c(6,10), cexRow=.6, cexCol=.5, main="Top 50 genes")
 pod_crp <- dge
+write.table(dge,file="pod_crp_rna.tsv",sep="\t",quote=FALSE)
+
 ```
 
 
@@ -329,6 +332,7 @@ colfunc <- colorRampPalette(c("blue", "white", "red"))
 heatmap.2(  as.matrix(dge[1:50,c(7:ncol(dge))]), col=colfunc(25),scale="row",
  trace="none",margins = c(6,10), cexRow=.6, cexCol=.5, main="Top 50 genes")
 t0_crp <- dge
+write.table(dge,file="t0_crp_rna.tsv",sep="\t",quote=FALSE)
 ```
 
 ## One dimensional enrichment analysis
