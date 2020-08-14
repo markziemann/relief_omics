@@ -162,7 +162,7 @@ dm_dn <- rownames(subset(dm,adj.P.Val<0.05 & logFC<0))
 length(dm_up)
 length(dm_dn)
 confects <- limma_confects(fit.reduced, coef=4, fdr=0.05)
-make_dm_plots(dm = dm ,name=name , mx=beta, groups=timepoint, confects=confects)
+make_dm_plots(dm = dm ,name=name , mx=Mval3, beta=beta, groups=timepoint, confects=confects)
 t0vPod_in <- list("dma"=dma, "dm_up"=dm_up, "dm_dn"=dm_dn, "confects"=confects)
 ```
 
@@ -191,7 +191,7 @@ dm_dn <- rownames(subset(dm,adj.P.Val<0.05 & logFC<0))
 length(dm_up)
 length(dm_dn)
 confects <- limma_confects(fit.reduced, coef=4, fdr=0.05)
-make_dm_plots(dm = dm ,name=name , mx=beta, groups=timepoint, confects=confects)
+make_dm_plots(dm = dm ,name=name , mx=Mval4, beta=beta, groups=crpgrp, confects=confects)
 t0_crp_in <- list("dma"=dma, "dm_up"=dm_up, "dm_dn"=dm_dn, "confects"=confects)
 ```
 
@@ -219,7 +219,7 @@ dm_dn <- rownames(subset(dm,adj.P.Val<0.05 & logFC<0))
 length(dm_up)
 length(dm_dn)
 confects <- limma_confects(fit.reduced, coef=4, fdr=0.05)
-make_dm_plots(dm = dm ,name=name , mx=beta, groups=timepoint, confects=confects)
+make_dm_plots(dm = dm ,name=name , mx=Mval4, beta=beta, groups=crpgrp, confects=confects)
 t0_crp_in <- list("dma"=dma, "dm_up"=dm_up, "dm_dn"=dm_dn, "confects"=confects)
 ```
 
@@ -252,7 +252,7 @@ dm_dn <- rownames(subset(dm,adj.P.Val<0.05 & logFC<0))
 length(dm_up)
 length(dm_dn)
 confects <- limma_confects(fit.reduced, coef=4, fdr=0.05)
-make_dm_plots(dm = dm ,name=name , mx=beta, groups=timepoint, confects=confects)
+make_dm_plots(dm = dm ,name=name , mx=Mval5, beta=beta, groups=timepoint, confects=confects)
 t0vPod_ex <- list("dma"=dma, "dm_up"=dm_up, "dm_dn"=dm_dn, "confects"=confects)
 
 ```
@@ -282,7 +282,7 @@ dm_dn <- rownames(subset(dm,adj.P.Val<0.05 & logFC<0))
 length(dm_up)
 length(dm_dn)
 confects <- limma_confects(fit.reduced, coef=4, fdr=0.05)
-make_dm_plots(dm = dm ,name=name , mx=beta, groups=timepoint, confects=confects)
+make_dm_plots(dm = dm ,name=name , mx=Mval6, beta=beta, groups=crpgrp, confects=confects)
 t0_crp_ex <- list("dma"=dma, "dm_up"=dm_up, "dm_dn"=dm_dn, "confects"=confects)
 ```
 
@@ -311,7 +311,7 @@ dm_dn <- rownames(subset(dm,adj.P.Val<0.05 & logFC<0))
 length(dm_up)
 length(dm_dn)
 confects <- limma_confects(fit.reduced, coef=4, fdr=0.05)
-make_dm_plots(dm = dm ,name=name , mx=beta, groups=timepoint, confects=confects)
+make_dm_plots(dm = dm ,name=name , mx=Mval6, beta=beta, groups=crpgrp, confects=confects)
 t0_crp_ex <- list("dma"=dma, "dm_up"=dm_up, "dm_dn"=dm_dn, "confects"=confects)
 ```
 
@@ -374,7 +374,7 @@ dm_dn <- rownames(subset(dm,adj.P.Val<0.05 & logFC<0))
 length(dm_up)
 length(dm_dn)
 confects <- limma_confects(fit.reduced, coef=4, fdr=0.05)
-make_dm_plots(dm = dm ,name=name , mx=beta, groups=timepoint, confects=confects)
+make_dm_plots(dm = dm ,name=name , mx=Mval3, beta=beta, groups=timepoint, confects=confects)
 t0vPod_in_blood <- list("dma"=dma, "dm_up"=dm_up, "dm_dn"=dm_dn, "confects"=confects)
 ```
 
@@ -402,7 +402,7 @@ dm_dn <- rownames(subset(dm,adj.P.Val<0.05 & logFC<0))
 length(dm_up)
 length(dm_dn)
 confects <- limma_confects(fit.reduced, coef=4, fdr=0.05)
-make_dm_plots(dm = dm ,name=name , mx=beta, groups=timepoint, confects=confects)
+make_dm_plots(dm = dm ,name=name , mx=Mval4, beta=beta, groups=crpgrp, confects=confects)
 t0_crp_in_blood <- list("dma"=dma, "dm_up"=dm_up, "dm_dn"=dm_dn, "confects"=confects)
 ```
 
@@ -431,7 +431,7 @@ dm_dn <- rownames(subset(dm,adj.P.Val<0.05 & logFC<0))
 length(dm_up)
 length(dm_dn)
 confects <- limma_confects(fit.reduced, coef=4, fdr=0.05)
-make_dm_plots(dm = dm ,name=name , mx=beta, groups=timepoint, confects=confects)
+make_dm_plots(dm = dm ,name=name , mx=Mval4, beta=beta, groups=crpgrp, confects=confects)
 t0_crp_in_blood <- list("dma"=dma, "dm_up"=dm_up, "dm_dn"=dm_dn, "confects"=confects)
 ```
 
@@ -463,7 +463,7 @@ dm_dn <- rownames(subset(dm,adj.P.Val<0.05 & logFC<0))
 length(dm_up)
 length(dm_dn)
 confects <- limma_confects(fit.reduced, coef=4, fdr=0.05)
-make_dm_plots(dm = dm ,name=name , mx=beta, groups=timepoint, confects=confects)
+make_dm_plots(dm = dm ,name=name , mx=Mval5, beta=beta, groups=timepoint, confects=confects)
 t0vPod_ex_blood <- list("dma"=dma, "dm_up"=dm_up, "dm_dn"=dm_dn, "confects"=confects)
 
 # pathway
@@ -514,7 +514,7 @@ dm_dn <- rownames(subset(dm,adj.P.Val<0.05 & logFC<0))
 length(dm_up)
 length(dm_dn)
 confects <- limma_confects(fit.reduced, coef=4, fdr=0.05)
-make_dm_plots(dm = dm ,name=name , mx=beta, groups=timepoint, confects=confects)
+make_dm_plots(dm = dm ,name=name , mx=Mval6, beta=beta, groups=crpgrp, confects=confects)
 t1_crp_ex_blood <- list("dma"=dma, "dm_up"=dm_up, "dm_dn"=dm_dn, "confects"=confects)
 
 # pathway
@@ -563,7 +563,7 @@ dm_dn <- rownames(subset(dm,adj.P.Val<0.05 & logFC<0))
 length(dm_up)
 length(dm_dn)
 confects <- limma_confects(fit.reduced, coef=4, fdr=0.05)
-make_dm_plots(dm = dm ,name=name , mx=beta, groups=timepoint, confects=confects)
+make_dm_plots(dm = dm ,name=name , mx=Mval6, beta=beta, groups=crpgrp, confects=confects)
 t0_crp_ex_blood <- list("dma"=dma, "dm_up"=dm_up, "dm_dn"=dm_dn, "confects"=confects)
 
 # pathway
