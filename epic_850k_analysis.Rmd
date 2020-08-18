@@ -131,8 +131,12 @@ male <- unique(sapply(strsplit(male,"-"),"[",1))
 intersect(female,male)
 # RG227 looks like a problem 
 sample.annotation2$malemeth <- as.numeric(colMeans(mvy) > 0)
-sample.annotation3 <- sample.annotation2[grep("RG227",sample.annotation2$Sample_Name,invert=TRUE),]
+excl <- c("RG210","RG227")
+sample.annotation3 <- sample.annotation2[which(!sample.annotation2$RG_number %in% excl),]
+
 Mval3 <- Mval2[,grep("RG227",colnames(Mval2),invert=TRUE)]
+Mval3 <- Mval3[,grep("RG210",colnames(Mval3),invert=TRUE)]
+
 write.table(sample.annotation3,file="samplesheet_mod.tsv",quote=FALSE,sep="\t")
 save.image("missmethyl_epic_850k_analysis.Rdata")
 
