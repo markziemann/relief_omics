@@ -199,7 +199,7 @@ NAME = "t0_v_pod"
 # no correction for cell types
 y <- xx[which(rowSums(xx)/ncol(xx)>=(10)),]
 dds <- DESeqDataSetFromMatrix(countData = y , colData = samplesheet,
-  design = ~ Sex + timepoint )
+  design = ~ Sex + age + timepoint )
 res <- DESeq(dds)
 z <- results(res)
 vsd <- vst(dds, blind=FALSE)
@@ -223,7 +223,7 @@ write.table(dge,file="t0_v_pod_rna.tsv",sep="\t",quote=FALSE)
 # correct for cell types
 y <- xx[which(rowSums(xx)/ncol(xx)>=(10)),]
 dds <- DESeqDataSetFromMatrix(countData = y , colData = samplesheet, 
-  design = ~ Sex + Monocytes.C + NK + T.CD8.Memory + T.CD4.Naive + T.CD8.Naive +
+  design = ~ Sex + age + Monocytes.C + NK + T.CD8.Memory + T.CD4.Naive + T.CD8.Naive +
   B.Naive + T.CD4.Memory + MAIT + T.gd.Vd2 + Neutrophils.LD + T.gd.non.Vd2 +
   Basophils.LD + Monocytes.NC.I + B.Memory + mDCs + pDCs + Plasmablasts + timepoint )
 res <- DESeq(dds)
@@ -270,7 +270,7 @@ NAME = "pod_crp"
 ss <- subset(samplesheet,timepoint==1)
 xxx <- xx[,colnames(xx) %in% rownames(ss)]
 y <- xxx[which(rowSums(xxx)/ncol(xxx)>=(10)),]
-dds <- DESeqDataSetFromMatrix(countData = y , colData = ss, design = ~ Sex + CrpGroup )
+dds <- DESeqDataSetFromMatrix(countData = y , colData = ss, design = ~ Sex + age + CrpGroup )
 res <- DESeq(dds)
 z <- results(res)
 vsd <- vst(dds, blind=FALSE)
@@ -315,7 +315,7 @@ NAME = "t0_crp"
 ss <- subset(samplesheet,timepoint==0)
 xxx <- xx[,colnames(xx) %in% rownames(ss)]
 y <- xxx[which(rowSums(xxx)/ncol(xxx)>=(10)),]
-dds <- DESeqDataSetFromMatrix(countData = y , colData = ss, design = ~ Sex + CrpGroup )
+dds <- DESeqDataSetFromMatrix(countData = y , colData = ss, design = ~ Sex + age + CrpGroup )
 res <- DESeq(dds)
 z <- results(res)
 vsd <- vst(dds, blind=FALSE)
