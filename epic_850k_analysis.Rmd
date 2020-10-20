@@ -149,6 +149,7 @@ save.image("missmethyl_epic_850k_analysis.Rdata")
 Here we compare pre-op samples to post-op samples.
 
 ```{r,dm1}
+
 name="t0vPod_in"
 timepoint <- factor(as.numeric(grepl("POD",sample.annotation3$Sample_Name)))
 age <- sample.annotation3$age
@@ -168,6 +169,8 @@ length(dm_dn)
 confects <- limma_confects(fit.reduced, coef=4, fdr=0.05)
 make_dm_plots(dm = dm ,name=name , mx=Mval3, beta=beta, groups=timepoint, confects=confects)
 t0vPod_in <- list("dma"=dma, "dm_up"=dm_up, "dm_dn"=dm_dn, "confects"=confects)
+write.table(dma,file="dm1.tsv",quote=FALSE,sep="\t")
+
 ```
 
 ## Low vs High CRP samples post-op
@@ -175,6 +178,7 @@ t0vPod_in <- list("dma"=dma, "dm_up"=dm_up, "dm_dn"=dm_dn, "confects"=confects)
 Here we compare the post-op samples of patients with low CRP to high CRP.
 
 ```{r,dm2}
+
 name="t1_crp_in"
 sample.annotation3$timepoint <- factor(as.numeric(grepl("POD",sample.annotation3$Sample_Name)))
 sample.annotation4 <- sample.annotation3[sample.annotation3$timepoint==1,]
@@ -197,6 +201,8 @@ length(dm_dn)
 confects <- limma_confects(fit.reduced, coef=4, fdr=0.05)
 make_dm_plots(dm = dm ,name=name , mx=Mval4, beta=beta, groups=crpgrp, confects=confects)
 t0_crp_in <- list("dma"=dma, "dm_up"=dm_up, "dm_dn"=dm_dn, "confects"=confects)
+write.table(dma,file="dm2.tsv",quote=FALSE,sep="\t")
+
 ```
 
 ## Low vs High CRP samples baseline
@@ -204,6 +210,7 @@ t0_crp_in <- list("dma"=dma, "dm_up"=dm_up, "dm_dn"=dm_dn, "confects"=confects)
 Here we compare the baseline samples of patients with low CRP to high CRP.
 
 ```{r,dm3}
+
 name="t0_crp_in"
 sample.annotation4 <- sample.annotation3[sample.annotation3$timepoint==0,]
 Mval4 <- Mval3[,which(colnames(Mval3) %in% sample.annotation4$Sample_Name)]
@@ -225,6 +232,8 @@ length(dm_dn)
 confects <- limma_confects(fit.reduced, coef=4, fdr=0.05)
 make_dm_plots(dm = dm ,name=name , mx=Mval4, beta=beta, groups=crpgrp, confects=confects)
 t0_crp_in <- list("dma"=dma, "dm_up"=dm_up, "dm_dn"=dm_dn, "confects"=confects)
+write.table(dma,file="dm3.tsv",quote=FALSE,sep="\t")
+
 ```
 
 
@@ -235,6 +244,7 @@ t0_crp_in <- list("dma"=dma, "dm_up"=dm_up, "dm_dn"=dm_dn, "confects"=confects)
 Here we compare pre-op samples to post-op samples, excluding sex chromosomes.
 
 ```{r,dm4}
+
 name="t0vPod_ex"
 cgx<-rownames(Locations[which(Locations$chr %in% "chrX"),])
 cgy<-rownames(Locations[which(Locations$chr %in% "chrY"),])
@@ -258,6 +268,7 @@ length(dm_dn)
 confects <- limma_confects(fit.reduced, coef=4, fdr=0.05)
 make_dm_plots(dm = dm ,name=name , mx=Mval5, beta=beta, groups=timepoint, confects=confects)
 t0vPod_ex <- list("dma"=dma, "dm_up"=dm_up, "dm_dn"=dm_dn, "confects"=confects)
+write.table(dma,file="dm4.tsv",quote=FALSE,sep="\t")
 
 ```
 
@@ -266,6 +277,7 @@ t0vPod_ex <- list("dma"=dma, "dm_up"=dm_up, "dm_dn"=dm_dn, "confects"=confects)
 Here we compare the post-op samples of patients with low CRP to high CRP excluding sex chromosomes.
 
 ```{r,dm5}
+
 name="t1_crp_ex"
 sample.annotation4 <- sample.annotation3[sample.annotation3$timepoint==1,]
 Mval6 <- Mval3[,which(colnames(Mval3) %in% sample.annotation4$Sample_Name)]
@@ -288,6 +300,8 @@ length(dm_dn)
 confects <- limma_confects(fit.reduced, coef=4, fdr=0.05)
 make_dm_plots(dm = dm ,name=name , mx=Mval6, beta=beta, groups=crpgrp, confects=confects)
 t0_crp_ex <- list("dma"=dma, "dm_up"=dm_up, "dm_dn"=dm_dn, "confects"=confects)
+write.table(dma,file="dm5.tsv",quote=FALSE,sep="\t")
+
 ```
 
 ## Low vs High CRP samples
@@ -295,6 +309,7 @@ t0_crp_ex <- list("dma"=dma, "dm_up"=dm_up, "dm_dn"=dm_dn, "confects"=confects)
 Here we compare the baseliine samples of patients with low CRP to high CRP excluding sex chromosomes.
 
 ```{r,dm6}
+
 name="t0_crp_ex"
 sample.annotation4 <- sample.annotation3[sample.annotation3$timepoint==0,]
 Mval6 <- Mval3[,which(colnames(Mval3) %in% sample.annotation4$Sample_Name)]
@@ -317,6 +332,8 @@ length(dm_dn)
 confects <- limma_confects(fit.reduced, coef=4, fdr=0.05)
 make_dm_plots(dm = dm ,name=name , mx=Mval6, beta=beta, groups=crpgrp, confects=confects)
 t0_crp_ex <- list("dma"=dma, "dm_up"=dm_up, "dm_dn"=dm_dn, "confects"=confects)
+write.table(dma,file="dm6.tsv",quote=FALSE,sep="\t")
+
 ```
 
 # Normalise for blood composition and repeat the analysis ####
@@ -340,7 +357,9 @@ dim(Mval)
 
 
 # plot mds
+
 ```{r,mds2}
+
 plotMDS(Mval, labels=sample.annotation2$Sample_Name, col=as.integer(factor(sample.annotation2$CrpGroup)))
 legend("topleft",legend=c("CRP high","CRP norm"),pch=16,cex=1.2,col=1:2)
 mds<-cmdscale(dist(t(Mval)))
@@ -352,6 +371,7 @@ g0<-unique(sapply(strsplit(g0,"-"),"[",1))
 # change header
 Mval2<-Mval
 colnames(Mval2)<-sample.annotation2$Sample_Name
+
 ```
 
 # Differential analysis including sex chromosomes
@@ -361,6 +381,7 @@ colnames(Mval2)<-sample.annotation2$Sample_Name
 Here we compare pre-op samples to post-op samples.
 
 ```{r,dm7}
+
 name="t0vPod_in_blood"
 timepoint <- factor(as.numeric(grepl("POD",sample.annotation3$Sample_Name)))
 age <- sample.annotation3$age
@@ -380,6 +401,8 @@ length(dm_dn)
 confects <- limma_confects(fit.reduced, coef=4, fdr=0.05)
 make_dm_plots(dm = dm ,name=name , mx=Mval3, beta=beta, groups=timepoint, confects=confects)
 t0vPod_in_blood <- list("dma"=dma, "dm_up"=dm_up, "dm_dn"=dm_dn, "confects"=confects)
+write.table(dma,file="dm7.tsv",quote=FALSE,sep="\t")
+
 ```
 
 ## Low vs High CRP samples post-op
@@ -387,6 +410,7 @@ t0vPod_in_blood <- list("dma"=dma, "dm_up"=dm_up, "dm_dn"=dm_dn, "confects"=conf
 Here we compare the post-op samples of patients with low CRP to high CRP.
 
 ```{r,dm8}
+
 name="t1_crp_in_blood"
 sample.annotation4 <- sample.annotation3[sample.annotation3$timepoint==1,]
 Mval4 <- Mval3[,which(colnames(Mval3) %in% sample.annotation4$Sample_Name)]
@@ -408,6 +432,8 @@ length(dm_dn)
 confects <- limma_confects(fit.reduced, coef=4, fdr=0.05)
 make_dm_plots(dm = dm ,name=name , mx=Mval4, beta=beta, groups=crpgrp, confects=confects)
 t0_crp_in_blood <- list("dma"=dma, "dm_up"=dm_up, "dm_dn"=dm_dn, "confects"=confects)
+write.table(dma,file="dm8.tsv",quote=FALSE,sep="\t")
+
 ```
 
 
@@ -416,6 +442,7 @@ t0_crp_in_blood <- list("dma"=dma, "dm_up"=dm_up, "dm_dn"=dm_dn, "confects"=conf
 Here we compare the baseline samples of patients with low CRP to high CRP.
 
 ```{r,dm9}
+
 name="t0_crp_in_blood"
 sample.annotation4 <- sample.annotation3[sample.annotation3$timepoint==0,]
 Mval4 <- Mval3[,which(colnames(Mval3) %in% sample.annotation4$Sample_Name)]
@@ -437,6 +464,8 @@ length(dm_dn)
 confects <- limma_confects(fit.reduced, coef=4, fdr=0.05)
 make_dm_plots(dm = dm ,name=name , mx=Mval4, beta=beta, groups=crpgrp, confects=confects)
 t0_crp_in_blood <- list("dma"=dma, "dm_up"=dm_up, "dm_dn"=dm_dn, "confects"=confects)
+write.table(dma,file="dm9.tsv",quote=FALSE,sep="\t")
+
 ```
 
 # Differential analysis excluding sex chromosomes
@@ -446,6 +475,7 @@ t0_crp_in_blood <- list("dma"=dma, "dm_up"=dm_up, "dm_dn"=dm_dn, "confects"=conf
 Here we compare pre-op samples to post-op samples, excluding X and Y chromosomes.
 
 ```{r,dm10}
+
 name="t0vPod_ex_blood"
 cgx<-rownames(Locations[which(Locations$chr %in% "chrX"),])
 cgy<-rownames(Locations[which(Locations$chr %in% "chrY"),])
@@ -469,6 +499,8 @@ length(dm_dn)
 confects <- limma_confects(fit.reduced, coef=4, fdr=0.05)
 make_dm_plots(dm = dm ,name=name , mx=Mval5, beta=beta, groups=timepoint, confects=confects)
 t0vPod_ex_blood <- list("dma"=dma, "dm_up"=dm_up, "dm_dn"=dm_dn, "confects"=confects)
+write.table(dma,file="dm10.tsv",quote=FALSE,sep="\t")
+write.table(confects$table,file="dm10c.tsv",quote=FALSE,sep="\t")
 
 # pathway
 dmap <- dma[grep("Promoter_Associated",dma$Regulatory_Feature_Group),]
@@ -498,6 +530,7 @@ capture.output(
 Here we compare the post-op samples of patients with low CRP to high CRP excluding sex chromosomes.
 
 ```{r,dm11}
+
 name="t1_crp_ex_blood"
 sample.annotation4 <- sample.annotation3[sample.annotation3$timepoint==1,]
 Mval6 <- Mval3[,which(colnames(Mval3) %in% sample.annotation4$Sample_Name)]
@@ -520,6 +553,8 @@ length(dm_dn)
 confects <- limma_confects(fit.reduced, coef=4, fdr=0.05)
 make_dm_plots(dm = dm ,name=name , mx=Mval6, beta=beta, groups=crpgrp, confects=confects)
 t1_crp_ex_blood <- list("dma"=dma, "dm_up"=dm_up, "dm_dn"=dm_dn, "confects"=confects)
+write.table(dma,file="dm11.tsv",quote=FALSE,sep="\t")
+write.table(confects$table,file="dm11c.tsv",quote=FALSE,sep="\t")
 
 # pathway
 dmap <- dma[grep("Promoter_Associated",dma$Regulatory_Feature_Group),]
@@ -540,6 +575,7 @@ capture.output(
     mitch_plots(res,outfile="t1_crp_ex_blood.pdf")
     , file = "/dev/null", append = FALSE,
     type = c("output", "message"), split = FALSE)
+
 ```
 
 ## Low vs High CRP samples
@@ -547,6 +583,7 @@ capture.output(
 Here we compare the baseline samples of patients with low CRP to high CRP excluding sex chromosomes.
 
 ```{r,dm12}
+
 name="t0_crp_ex_blood"
 sample.annotation4 <- sample.annotation3[sample.annotation3$timepoint==0,]
 Mval6 <- Mval3[,which(colnames(Mval3) %in% sample.annotation4$Sample_Name)]
@@ -569,6 +606,9 @@ length(dm_dn)
 confects <- limma_confects(fit.reduced, coef=4, fdr=0.05)
 make_dm_plots(dm = dm ,name=name , mx=Mval6, beta=beta, groups=crpgrp, confects=confects)
 t0_crp_ex_blood <- list("dma"=dma, "dm_up"=dm_up, "dm_dn"=dm_dn, "confects"=confects)
+write.table(dma,file="dm12.tsv",quote=FALSE,sep="\t")
+write.table(confects$table,file="dm12c.tsv",quote=FALSE,sep="\t")
+
 
 # pathway
 dmap <- dma[grep("Promoter_Associated",dma$Regulatory_Feature_Group),]
@@ -579,7 +619,7 @@ rank <- aggregate(. ~ genename,dmap2,mean)
 rownames(rank) <- rank$genename
 rank$genename=NULL
 write.table(rank,file="t0_crp_meth.tsv",sep="\t",quote=FALSE)
-capture.output( 
+capture.output(
     res <- mitch_calc(x = rank,genesets = genesets, priority = "significance",resrows=20)
     , file = "/dev/null", append = FALSE,
     type = c("output", "message"), split = FALSE)
@@ -589,5 +629,136 @@ capture.output(
     mitch_plots(res,outfile="t0_crp_ex_blood.pdf")
     , file = "/dev/null", append = FALSE,
     type = c("output", "message"), split = FALSE)
+
+```
+
+Now to see whether there is any diagnostic power here.
+
+```{r,roc}
+
+# Limma p-values
+ROCp <- function(ngenes){
+  pnames <- rownames(dm)[1:ngenes]
+  topgenes <- as.data.frame(Mval6[which(rownames(Mval6) %in% pnames),])
+  topgenes$ctrl <- rowMeans(topgenes[,which(crpgrp==0)])
+  topgenes$case <- rowMeans(topgenes[,which(crpgrp==1)])
+  mds <- plotMDS(topgenes,ndim=2)
+  mds <- mds$cmdscale.out
+
+  ctrl_dist <- apply(mds[1:(nrow(mds)-2),],1,function(x) {
+    a2=(x[1] - mds[(nrow(mds)-1),1] )^2
+    b2=(x[1] - mds[(nrow(mds)-1),2] )^2
+    sqrt(a2+b2)
+  })
+
+  case_dist <- apply(mds[1:(nrow(mds)-2),],1,function(x) {
+    a2=(x[1] - mds[nrow(mds),1] )^2
+    b2=(x[1] - mds[nrow(mds),2] )^2
+    sqrt(a2+b2)
+  })
+
+  df <- data.frame(ctrl_dist,case_dist)
+
+  df$classification_case <- unname(unlist(apply(df,1,function(x) {
+    if (x[2]<x[1]) {TRUE} else {FALSE}
+  }))) *1
+
+  df$case_conf <- df$ctrl_dist / ( df$ctrl_dist + df$case_dist )
+  df$ctrl_conf <- df$case_dist / ( df$ctrl_dist + df$case_dist )
+  df$conf <- unname(apply(df,1,function(x) {
+    if (x[4]>x[5]) {x[4]} else {x[5]}
+  }))
+
+  df$crpgrp <- crpgrp
+  df <- df[order(-df$conf),]
+  df$correct <- unname(unlist(apply(df,1,function(x) { if (x[3] == x[7]) {1} else {0} } )))
+
+  tpr <- cumsum(df$correct) / nrow(df)
+  tpr <- c(tpr,1)
+  fpr <- cumsum((df$correct -1)*-1) / nrow(df)
+  fpr <- c(fpr,1)
+  # AUC 
+  id <- order(fpr)
+  AUC=round(sum(diff(fpr[id])*rollmean(tpr[id],2)),3)
+  HEADER=paste("AUC =",AUC)
+  plot(fpr,tpr,type="l",xlim=c(0,1),ylim=c(0,1),xlab="FPR",ylab="TPR",main=paste(ngenes,"genes"))
+  mtext(HEADER)
+  AUC
+}
+
+# TopConfects ranking
+ROCc <- function(ngenes){
+  pnames <- confects$table$name[1:ngenes]
+  topgenes <- as.data.frame(Mval6[which(rownames(Mval6) %in% pnames),])
+
+#  idx <- confects$table$index[1:ngenes]
+#  topgenes <- as.data.frame(Mval6[idx,])
+  topgenes$ctrl <- rowMeans(topgenes[,which(crpgrp==0)])
+  topgenes$case <- rowMeans(topgenes[,which(crpgrp==1)])
+  mds <- plotMDS(topgenes,ndim=2)
+  mds <- mds$cmdscale.out
+
+  ctrl_dist <- apply(mds[1:(nrow(mds)-2),],1,function(x) {
+    a2=(x[1] - mds[(nrow(mds)-1),1] )^2
+    b2=(x[1] - mds[(nrow(mds)-1),2] )^2
+    sqrt(a2+b2)
+  })
+
+  case_dist <- apply(mds[1:(nrow(mds)-2),],1,function(x) {
+    a2=(x[1] - mds[nrow(mds),1] )^2
+    b2=(x[1] - mds[nrow(mds),2] )^2
+    sqrt(a2+b2)   
+  })
+
+  df <- data.frame(ctrl_dist,case_dist)
+
+  df$classification_case <- unname(unlist(apply(df,1,function(x) {
+    if (x[2]<x[1]) {TRUE} else {FALSE} 
+  }))) *1
+
+  df$case_conf <- df$ctrl_dist / ( df$ctrl_dist + df$case_dist )
+  df$ctrl_conf <- df$case_dist / ( df$ctrl_dist + df$case_dist )
+  df$conf <- unname(apply(df,1,function(x) {
+    if (x[4]>x[5]) {x[4]} else {x[5]}  
+  }))
+
+  df$crpgrp <- crpgrp
+  df <- df[order(-df$conf),]
+  df$correct <- unname(unlist(apply(df,1,function(x) { if (x[3] == x[7]) {1} else {0} } )))
+
+  tpr <- cumsum(df$correct) / nrow(df)
+  tpr <- c(tpr,1)
+  fpr <- cumsum((df$correct -1)*-1) / nrow(df)
+  fpr <- c(fpr,1)
+  # AUC 
+  id <- order(fpr)
+  AUC=round(sum(diff(fpr[id])*rollmean(tpr[id],2)),3)
+  HEADER=paste("AUC =",AUC)
+  plot(fpr,tpr,type="l",xlim=c(0,1),ylim=c(0,1),xlab="FPR",ylab="TPR",main=paste(ngenes,"genes"))
+  mtext(HEADER)
+  AUC
+}
+
+ngenes <- c(2,5,10,20,30,40,50,60,70,80,90,100,125,150,200,250,300,400,500)
+aucs <- lapply(ngenes,ROCp)
+aucres <- data.frame(ngenes,unlist(aucs))
+plot(aucres$ngenes,aucres$unlist.aucs.,xlab="number of genes in panel",ylab="AUC")
+grid()
+
+
+ngenes <- c(2,5,10,20,30,40,50,60,70,80,90,100,125,150,200,250,300,400,500)
+aucs <- lapply(ngenes,ROCc)
+aucres <- data.frame(ngenes,unlist(aucs))
+plot(aucres$ngenes,aucres$unlist.aucs.,xlab="number of genes in panel",ylab="AUC")
+grid()
+
+```
+
+## Session information
+
+```{r,session}
+
+sessionInfo()
+save.image("missmethyl_epic_850k_analysis_full.Rdata")
 
 ```
