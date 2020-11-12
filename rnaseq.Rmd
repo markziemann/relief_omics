@@ -16,6 +16,7 @@ theme: cosmo
 # Packages 
 
 ```{r,packages}
+
 suppressPackageStartupMessages({
     library("tidyverse")
     library("reshape2")
@@ -24,12 +25,15 @@ suppressPackageStartupMessages({
     library("fgsea")
     library("MASS")
     library("mitch")
+    library("eulerr")
 })
+
 ```
 
 # Import read counts
 
 ```{r,importdata}
+
 tmp <- read.table("3col.tsv",header=F)
 x <- as.matrix(acast(tmp, V2~V1, value.var="V3", fun.aggregate = sum))
 x <- as.data.frame(x)
@@ -42,15 +46,17 @@ rownames(xx) <- xx$geneid
 colnames <- gsub("T0R","T0",colnames(xx))
 xx$geneid = NULL
 xx <- round(xx)
+
 ```
 
-# curate the samplesheet
+# Curate the samplesheet
 
 Here we're manipulating the sample sheet.
 Making sure that the samplesheet matches the names of the data sets and vice versa.
 Ensuring that each patient has a baseline and postop sample.
 
 ```{r,samplesheet}
+
 samplesheet<-read.csv("samplesheet.tsv",sep="\t",stringsAsFactors=FALSE)
 mysamples <- colnames(xx)
 baseline <- mysamples[grep("T0",mysamples)]
@@ -71,6 +77,7 @@ samplesheet <- rbind(samplesheet2,samplesheet3)
 xx <- xx[,which(colnames(xx) %in% rownames(samplesheet))]
 samplesheet <- samplesheet[which(rownames(samplesheet) %in% colnames(xx)),]
 samplesheet <- samplesheet[order(rownames(samplesheet)),]
+
 ```
 
 # Blood cell composition correction
@@ -81,6 +88,7 @@ DOI:https://doi.org/10.1016/j.celrep.2019.01.041
 
 
 ```{r,blood}
+
 xn <- xx
 gt <- as.data.frame(sapply(strsplit(rownames(xn)," "),"[[",2) )
 rownames(gt) <- rownames(xx)
@@ -182,17 +190,20 @@ boxplot(dec_t0_lo$Plasmablasts , dec_t0_hi$Plasmablasts , dec_po_lo$Plasmablasts
 # MDS analysis
 
 ```{r,mds}
+
 plot(cmdscale(dist(t(xx))), xlab="Coordinate 1", ylab="Coordinate 2",
   type = "p", col="gray", pch=19, cex.axis=1.3,cex.lab=1.3, bty='l')
 text(cmdscale(dist(t(xx))), labels=colnames(xx),cex=1.3)
 heatmap.2(cor(xx),trace="none",margins = c(10,10), main="pearson correlation heatmap")
 heatmap.2(cor(xx,method="s"),trace="none",margins = c(10,10), main="spearman correlation heatmap")
+
 ```
 
 
 # DE analysis baseline versus post-op
 
 ```{r,de1}
+
 # filter genes with fewer than 10 reads per sample
 NAME = "t0_v_pod"
 
@@ -260,11 +271,13 @@ heatmap.2(  as.matrix(dge[1:50,c(7:ncol(dge))]), col=colfunc(25),scale="row",
   ColSideColors=colCols ,
   trace="none",margins = c(6,10), cexRow=.6, cexCol=.5, main="Top 50 genes")
 #t0_v_pod <- dge
+
 ```
 
 # DE analysis post-op low versus high CRP
 
 ```{r,de2}
+
 # filter genes with fewer than 10 reads per sample
 NAME = "pod_crp"
 ss <- subset(samplesheet,timepoint==1)
@@ -306,10 +319,10 @@ write.table(dge,file="pod_crp_rna.tsv",sep="\t",quote=FALSE)
 
 ```
 
-
 # DE analysis baseline low versus high CRP
 
 ```{r,de3}
+
 # filter genes with fewer than 10 reads per sample
 NAME = "t0_crp"
 ss <- subset(samplesheet,timepoint==0)
@@ -349,16 +362,126 @@ heatmap.2(  as.matrix(dge[1:50,c(7:ncol(dge))]), col=colfunc(25),scale="row",
  trace="none",margins = c(6,10), cexRow=.6, cexCol=.5, main="Top 50 genes")
 t0_crp <- dge
 write.table(dge,file="t0_crp_rna.tsv",sep="\t",quote=FALSE)
+
 ```
 
-## One dimensional enrichment analysis
+# DE analysis baseline versus post-op (low CRP)
 
-Not correcting for blood compostion changes.
+```{r,de4}
 
-```{r,1dpw, message = FALSE}
-# reactome
-download.file("https://reactome.org/download/current/ReactomePathways.gmt.zip", destfile="ReactomePathways.gmt.zip")
-unzip("ReactomePathways.gmt.zip")
+NAME = "t0_vs_pod_lowCRP"
+ss <- subset(samplesheet,CrpGroup==0)
+xxx <- xx[,colnames(xx) %in% rownames(ss)]
+y <- xxx[which(rowSums(xxx)/ncol(xxx)>=(10)),]
+dds <- DESeqDataSetFromMatrix(countData = y , colData = ss, design = ~ Sex + age + timepoint )
+res <- DESeq(dds)
+z <- results(res)
+vsd <- vst(dds, blind=FALSE)
+zz <- cbind(as.data.frame(z),assay(vsd))
+dge <- as.data.frame(zz[order(zz$pvalue),])
+dge[1:10,1:6]
+sig <- subset(dge,padj<0.05)
+SIG = nrow(sig)
+DN = nrow(subset(sig,log2FoldChange<0))
+UP = nrow(subset(sig,log2FoldChange>0))
+HEADER = paste(NAME, SIG , "DGEs,", UP ,"upregulated,", DN, "downregulated")
+# smear
+plot(log2(dge$baseMean),dge$log2FoldChange,cex=0.6,cex.axis=1.2,cex.lab=1.3, xlab="log2 base mean",
+  ylim=c(-3,3),ylab="log2 fold change" ,pch=19,col="#838383")
+points(log2(sig$baseMean),sig$log2FoldChange,cex=0.6,pch=19,col="red")
+mtext((HEADER),cex=1.2)
+top <- head(sig,20)
+# volcano
+plot(dge$log2FoldChange, -log2(dge$pvalue) ,cex=0.6, cex.lab=1.3,cex.axis=1.2,
+ xlim=c(-3,3),xlab="log2 fold change", ylab="-log2 p-value" ,pch=19,col="#838383")
+points(sig$log2FoldChange, -log2(sig$pvalue),cex=0.6,pch=19,col="red")
+mtext((HEADER),cex=1.2)
+# top N gene heatmap
+colCols <- as.character(ss$timepoint)
+colCols <- gsub("1","orange",colCols)
+colCols <- gsub("0","yellow",colCols)
+
+colfunc <- colorRampPalette(c("blue", "white", "red"))
+heatmap.2(  as.matrix(dge[1:50,c(7:ncol(dge))]), col=colfunc(25),scale="row",
+  ColSideColors=colCols ,
+ trace="none",margins = c(6,10), cexRow=.6, cexCol=.5, main="Top 50 genes")
+t0_vs_pod_lowCRP <- dge
+write.table(dge,file="t0_vs_pod_lowCRP_rna.tsv",sep="\t",quote=FALSE)
+
+t0_vs_pod_lowCRP_up <- rownames( subset(dge,padj<0.05 & log2FoldChange > 0 ) )
+t0_vs_pod_lowCRP_dn <- rownames( subset(dge,padj<0.05 & log2FoldChange < 0 ) )
+
+```
+
+# DE analysis baseline versus post-op (high CRP)
+
+```{r,de5}
+
+NAME = "t0_vs_pod_highCRP"
+ss <- subset(samplesheet,CrpGroup==1)
+xxx <- xx[,colnames(xx) %in% rownames(ss)]
+y <- xxx[which(rowSums(xxx)/ncol(xxx)>=(10)),]
+dds <- DESeqDataSetFromMatrix(countData = y , colData = ss, design = ~ Sex + age + timepoint )
+res <- DESeq(dds)
+z <- results(res)
+vsd <- vst(dds, blind=FALSE)
+zz <- cbind(as.data.frame(z),assay(vsd))
+dge <- as.data.frame(zz[order(zz$pvalue),])
+dge[1:10,1:6]
+sig <- subset(dge,padj<0.05)
+SIG = nrow(sig)
+DN = nrow(subset(sig,log2FoldChange<0))
+UP = nrow(subset(sig,log2FoldChange>0))
+HEADER = paste(NAME, SIG , "DGEs,", UP ,"upregulated,", DN, "downregulated")
+# smear
+plot(log2(dge$baseMean),dge$log2FoldChange,cex=0.6,cex.axis=1.2,cex.lab=1.3, xlab="log2 base mean",
+  ylim=c(-3,3),ylab="log2 fold change" ,pch=19,col="#838383")
+points(log2(sig$baseMean),sig$log2FoldChange,cex=0.6,pch=19,col="red")
+mtext((HEADER),cex=1.2)
+top <- head(sig,20)
+# volcano
+plot(dge$log2FoldChange, -log2(dge$pvalue) ,cex=0.6, cex.lab=1.3,cex.axis=1.2,
+ xlim=c(-3,3),xlab="log2 fold change", ylab="-log2 p-value" ,pch=19,col="#838383")
+points(sig$log2FoldChange, -log2(sig$pvalue),cex=0.6,pch=19,col="red")
+mtext((HEADER),cex=1.2)
+# top N gene heatmap
+colCols <- as.character(ss$timepoint)
+colCols <- gsub("1","orange",colCols)
+colCols <- gsub("0","yellow",colCols)
+
+colfunc <- colorRampPalette(c("blue", "white", "red"))
+heatmap.2(  as.matrix(dge[1:50,c(7:ncol(dge))]), col=colfunc(25),scale="row",
+  ColSideColors=colCols ,
+ trace="none",margins = c(6,10), cexRow=.6, cexCol=.5, main="Top 50 genes")
+t0_vs_pod_highCRP <- dge
+write.table(dge,file="t0_vs_pod_highCRP_rna.tsv",sep="\t",quote=FALSE)
+
+t0_vs_pod_highCRP_up <- rownames( subset(dge,padj<0.05 & log2FoldChange > 0 ) )
+t0_vs_pod_highCRP_dn <- rownames( subset(dge,padj<0.05 & log2FoldChange < 0 ) )
+
+```
+
+# Compare low and high patterns
+
+DE4 and DE5 will be compared.
+
+```{r,venn1}
+
+v1 <- list("low CRP up"=t0_vs_pod_lowCRP_up, 
+    "low CRP dn"=t0_vs_pod_lowCRP_dn,
+    "high CRP up"=t0_vs_pod_highCRP_up,
+    "high CRP dn"=t0_vs_pod_highCRP_dn)
+
+plot(euler(v1),quantities = TRUE, main="Gene overlap")
+
+```
+
+Set up mitch data.
+
+```{r,mitch_setup}
+
+#download.file("https://reactome.org/download/current/ReactomePathways.gmt.zip", destfile="ReactomePathways.gmt.zip")
+#unzip("ReactomePathways.gmt.zip")
 genesets <- gmt_import("ReactomePathways.gmt")
 
 # set up the gene table
@@ -366,14 +489,69 @@ gt <- as.data.frame(sapply(strsplit(rownames(xx)," "),"[[",2))
 gt$id <- rownames(xx)
 colnames(gt) <- c("gene name","id")
 
+```
 
+Now mitch analysis with DE4 and DE5
+
+```{r,mitch1}
+
+l <- list("low CRP"=t0_vs_pod_lowCRP, "high CRP"=t0_vs_pod_highCRP)
+y <- mitch_import( l , DEtype="DESeq2", geneTable=gt)
+
+# prioritisation by statistical significance
+res <- mitch_calc(y, genesets, priority="significance",resrows=50)
+head(res$enrichment_result,20)
+
+lo_up <- res$enrichment_result[which(p.adjust(res$enrichment_result$p.low.CRP)<0.05 & res$enrichment_result$s.low.CRP>0),1]
+lo_dn <- res$enrichment_result[which(p.adjust(res$enrichment_result$p.low.CRP)<0.05 & res$enrichment_result$s.low.CRP<0),1]
+hi_up <- res$enrichment_result[which(p.adjust(res$enrichment_result$p.high.CRP)<0.05 & res$enrichment_result$s.high.CRP>0),1]
+hi_dn <- res$enrichment_result[which(p.adjust(res$enrichment_result$p.high.CRP)<0.05 & res$enrichment_result$s.high.CRP<0),1]
+
+v1 <- list("low CRP up"=lo_up,
+    "low CRP dn"=lo_dn,
+    "high CRP up"=hi_up,
+    "high CRP dn"=hi_dn)
+
+plot(euler(v1),quantities = TRUE, main="Gene set overlap")
+
+unlink("t0_v_pod_lohi_mitch_sig.html")
+capture.output(
+    mitch_report(res, "t0_v_pod_lohi_mitch_sig.html")
+    , file = "/dev/null", append = FALSE,
+    type = c("output", "message"), split = FALSE)
+
+# prioritisation by statistical significance
+res <- mitch_calc(y, genesets, priority="effect",resrows=50)
+head(res$enrichment_result,20)
+
+unlink("t0_v_pod_lohi_mitch_eff.html")
+capture.output(
+    mitch_report(res, "t0_v_pod_lohi_mitch_eff.html")
+    , file = "/dev/null", append = FALSE,
+    type = c("output", "message"), split = FALSE)
+
+# prioritisation by discordance
+res <- mitch_calc(y, genesets, priority="SD",resrows=50)
+head(res$enrichment_result,20)
+
+unlink("t0_v_pod_lohi_mitch_sd.html")
+capture.output(
+    mitch_report(res, "t0_v_pod_lohi_mitch_sd.html")
+    , file = "/dev/null", append = FALSE,
+    type = c("output", "message"), split = FALSE)
+
+```
+
+
+## One dimensional enrichment analysis
+
+Not correcting for blood compostion changes.
+
+```{r,1dpw, message = FALSE}
 # t0_v_pod
 # baseline versus post-op
 y <- mitch_import(t0_v_pod, DEtype="DESeq2", geneTable=gt)
-capture.output( 
-    res <- mitch_calc(y, genesets, priority="significance",resrows=100) 
-    , file = "/dev/null", append = FALSE,
-    type = c("output", "message"), split = FALSE)
+res <- mitch_calc(y, genesets, priority="significance",resrows=100) 
 head(res$enrichment_result,20)
 unlink("t0_v_pod_mitch.html")
 capture.output(
@@ -384,10 +562,7 @@ capture.output(
 # pod_crp
 # postop low versus high CRP
 y <- mitch_import(pod_crp, DEtype="DESeq2", geneTable=gt)
-capture.output( 
-    res <- mitch_calc(y, genesets, priority="significance",resrows=100)
-    , file = "/dev/null", append = FALSE,
-    type = c("output", "message"), split = FALSE)
+res <- mitch_calc(y, genesets, priority="significance",resrows=100)
 head(res$enrichment_result,20)
 unlink("pod_crp_mitch.html")
 capture.output(
@@ -398,10 +573,7 @@ capture.output(
 # t0_crp
 # baseline low versus high CRP
 y <- mitch_import(t0_crp, DEtype="DESeq2", geneTable=gt)
-capture.output(
-    res <- mitch_calc(y, genesets, priority="significance",resrows=100)
-    , file = "/dev/null", append = FALSE,
-    type = c("output", "message"), split = FALSE)
+res <- mitch_calc(y, genesets, priority="significance",resrows=100)
 head(res$enrichment_result,20)
 unlink("t0_crp_mitch.html")
 capture.output(
@@ -415,10 +587,7 @@ capture.output(
 # t0_v_pod
 # baseline versus post-op
 y <- mitch_import(t0_v_pod, DEtype="DESeq2", geneTable=gt)
-capture.output(
-    res <- mitch_calc(y, genesets, priority="effect",resrows=100)
-    , file = "/dev/null", append = FALSE,
-    type = c("output", "message"), split = FALSE)
+res <- mitch_calc(y, genesets, priority="effect",resrows=100)
 head(res$enrichment_result,20)
 unlink("t0_v_pod_mitche.html")
 capture.output(
@@ -430,10 +599,7 @@ capture.output(
 # pod_crp
 # postop low versus high CRP
 y <- mitch_import(pod_crp, DEtype="DESeq2", geneTable=gt)
-capture.output(
-    res <- mitch_calc(y, genesets, priority="effect",resrows=100)
-    , file = "/dev/null", append = FALSE,
-    type = c("output", "message"), split = FALSE)
+res <- mitch_calc(y, genesets, priority="effect",resrows=100)
 head(res$enrichment_result,20)
 unlink("pod_crp_mitche.html")
 capture.output(
@@ -445,10 +611,7 @@ capture.output(
 # t0_crp
 # baseline low versus high CRP
 y <- mitch_import(t0_crp, DEtype="DESeq2", geneTable=gt)
-capture.output(
-    res <- mitch_calc(y, genesets, priority="effect",resrows=100)
-    , file = "/dev/null", append = FALSE,
-    type = c("output", "message"), split = FALSE)
+res <- mitch_calc(y, genesets, priority="effect",resrows=100)
 head(res$enrichment_result,20)
 unlink("t0_crp_mitche.html")
 capture.output(
@@ -460,10 +623,7 @@ capture.output(
 # 3D analysys significance
 z <- list("t0_v_pod"=t0_v_pod, "pod_crp"=pod_crp, "t0_crp"=t0_crp)
 zz <- mitch_import(z, DEtype="DESeq2", geneTable=gt)
-capture.output(
-    res <- mitch_calc(zz, genesets, priority="significance",resrows=100)
-    , file = "/dev/null", append = FALSE,
-    type = c("output", "message"), split = FALSE)
+res <- mitch_calc(zz, genesets, priority="significance",resrows=100)
 head(res$enrichment_result,20)
 unlink("3d_mitch.html")
 capture.output(
@@ -472,10 +632,7 @@ capture.output(
     type = c("output", "message"), split = FALSE)
 
 # 3D analysys effect size
-capture.output(
-    res <- mitch_calc(zz, genesets, priority="effect",resrows=100)
-    , file = "/dev/null", append = FALSE,
-    type = c("output", "message"), split = FALSE)
+res <- mitch_calc(zz, genesets, priority="effect",resrows=100)
 head(res$enrichment_result,20)
 unlink("3d_mitche.html")
 capture.output(
