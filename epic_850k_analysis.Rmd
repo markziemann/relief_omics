@@ -5,6 +5,7 @@ date: "`r Sys.Date()`"
 output:
   html_document:
     toc: true
+    toc_float: true
     fig_width: 7
     fig_height: 7
 theme: cosmo
@@ -27,6 +28,7 @@ This script should be run with R 4.0
 
 ```{r,packages}
 suppressPackageStartupMessages({
+    library("zoo")
     library("missMethyl")
     library("limma")
     library("minfi")
@@ -103,8 +105,15 @@ dim(Mval)
 
 # plot mds
 ```{r,mds}
+
 plotMDS(Mval, labels=sample.annotation2$Sample_Name, col=as.integer(factor(sample.annotation2$CrpGroup)))
 legend("topleft",legend=c("CRP high","CRP norm"),pch=16,cex=1.2,col=1:2)
+
+pdf("epic_01_mds.pdf")
+plotMDS(Mval, labels=sample.annotation2$Sample_Name, col=as.integer(factor(sample.annotation2$CrpGroup)))
+legend("topleft",legend=c("CRP high","CRP norm"),pch=16,cex=1.2,col=1:2)
+dev.off()
+
 mds<-cmdscale(dist(t(Mval)))
 rownames(mds)<-sample.annotation2$Sample_Name
 g1<-rownames(mds[which(mds[,1]>0),])
@@ -124,6 +133,11 @@ cgy<-rownames(Locations[which(Locations$chr %in% "chrY"),])
 mvx<-Mval2[which(rownames(Mval2) %in% cgx),]
 mvy<-Mval2[which(rownames(Mval2) %in% cgy),]
 plot(colMeans(mvy),colMeans(mvx))
+
+pdf("epic_02_xy.pdf")
+plot(colMeans(mvy),colMeans(mvx))
+dev.off()
+
 female <- names(which(colMeans(mvy) < -0))
 female <- unique(sapply(strsplit(female,"-"),"[",1))
 male <- names(which(colMeans(mvy) > 0))
@@ -168,6 +182,11 @@ length(dm_up)
 length(dm_dn)
 confects <- limma_confects(fit.reduced, coef=4, fdr=0.05)
 make_dm_plots(dm = dm ,name=name , mx=Mval3, beta=beta, groups=timepoint, confects=confects)
+
+pdf("epic_03_dm01.pdf")
+make_dm_plots(dm = dm ,name=name , mx=Mval3, beta=beta, groups=timepoint, confects=confects)
+dev.off()
+
 t0vPod_in <- list("dma"=dma, "dm_up"=dm_up, "dm_dn"=dm_dn, "confects"=confects)
 write.table(dma,file="dm1.tsv",quote=FALSE,sep="\t")
 
@@ -200,6 +219,11 @@ length(dm_up)
 length(dm_dn)
 confects <- limma_confects(fit.reduced, coef=4, fdr=0.05)
 make_dm_plots(dm = dm ,name=name , mx=Mval4, beta=beta, groups=crpgrp, confects=confects)
+
+pdf("epic_04_dm02.pdf")
+make_dm_plots(dm = dm ,name=name , mx=Mval4, beta=beta, groups=crpgrp, confects=confects)
+dev.off()
+
 t0_crp_in <- list("dma"=dma, "dm_up"=dm_up, "dm_dn"=dm_dn, "confects"=confects)
 write.table(dma,file="dm2.tsv",quote=FALSE,sep="\t")
 
@@ -231,6 +255,11 @@ length(dm_up)
 length(dm_dn)
 confects <- limma_confects(fit.reduced, coef=4, fdr=0.05)
 make_dm_plots(dm = dm ,name=name , mx=Mval4, beta=beta, groups=crpgrp, confects=confects)
+
+pdf("epic_05_dm03.pdf")
+make_dm_plots(dm = dm ,name=name , mx=Mval4, beta=beta, groups=crpgrp, confects=confects)
+dev.off()
+
 t0_crp_in <- list("dma"=dma, "dm_up"=dm_up, "dm_dn"=dm_dn, "confects"=confects)
 write.table(dma,file="dm3.tsv",quote=FALSE,sep="\t")
 
@@ -267,6 +296,11 @@ length(dm_up)
 length(dm_dn)
 confects <- limma_confects(fit.reduced, coef=4, fdr=0.05)
 make_dm_plots(dm = dm ,name=name , mx=Mval5, beta=beta, groups=timepoint, confects=confects)
+
+pdf("epic_06_dm04.pdf")
+make_dm_plots(dm = dm ,name=name , mx=Mval5, beta=beta, groups=timepoint, confects=confects)
+dev.off()
+
 t0vPod_ex <- list("dma"=dma, "dm_up"=dm_up, "dm_dn"=dm_dn, "confects"=confects)
 write.table(dma,file="dm4.tsv",quote=FALSE,sep="\t")
 
@@ -299,6 +333,11 @@ length(dm_up)
 length(dm_dn)
 confects <- limma_confects(fit.reduced, coef=4, fdr=0.05)
 make_dm_plots(dm = dm ,name=name , mx=Mval6, beta=beta, groups=crpgrp, confects=confects)
+
+pdf("epic_07_dm05.pdf")
+make_dm_plots(dm = dm ,name=name , mx=Mval6, beta=beta, groups=crpgrp, confects=confects)
+dev.off()
+
 t0_crp_ex <- list("dma"=dma, "dm_up"=dm_up, "dm_dn"=dm_dn, "confects"=confects)
 write.table(dma,file="dm5.tsv",quote=FALSE,sep="\t")
 
@@ -331,6 +370,11 @@ length(dm_up)
 length(dm_dn)
 confects <- limma_confects(fit.reduced, coef=4, fdr=0.05)
 make_dm_plots(dm = dm ,name=name , mx=Mval6, beta=beta, groups=crpgrp, confects=confects)
+
+pdf("epic_08_dm06.pdf")
+make_dm_plots(dm = dm ,name=name , mx=Mval6, beta=beta, groups=crpgrp, confects=confects)
+dev.off()
+
 t0_crp_ex <- list("dma"=dma, "dm_up"=dm_up, "dm_dn"=dm_dn, "confects"=confects)
 write.table(dma,file="dm6.tsv",quote=FALSE,sep="\t")
 
@@ -362,6 +406,12 @@ dim(Mval)
 
 plotMDS(Mval, labels=sample.annotation2$Sample_Name, col=as.integer(factor(sample.annotation2$CrpGroup)))
 legend("topleft",legend=c("CRP high","CRP norm"),pch=16,cex=1.2,col=1:2)
+
+pdf("epic_09_mds_bloodnorm.pdf")
+plotMDS(Mval, labels=sample.annotation2$Sample_Name, col=as.integer(factor(sample.annotation2$CrpGroup)))
+legend("topleft",legend=c("CRP high","CRP norm"),pch=16,cex=1.2,col=1:2)
+dev.off()
+
 mds<-cmdscale(dist(t(Mval)))
 rownames(mds)<-sample.annotation2$Sample_Name
 g1<-rownames(mds[which(mds[,1]>0),])
@@ -400,6 +450,11 @@ length(dm_up)
 length(dm_dn)
 confects <- limma_confects(fit.reduced, coef=4, fdr=0.05)
 make_dm_plots(dm = dm ,name=name , mx=Mval3, beta=beta, groups=timepoint, confects=confects)
+
+pdf("epic_10_dm07.pdf")
+make_dm_plots(dm = dm ,name=name , mx=Mval3, beta=beta, groups=timepoint, confects=confects)
+dev.off()
+
 t0vPod_in_blood <- list("dma"=dma, "dm_up"=dm_up, "dm_dn"=dm_dn, "confects"=confects)
 write.table(dma,file="dm7.tsv",quote=FALSE,sep="\t")
 
@@ -431,6 +486,11 @@ length(dm_up)
 length(dm_dn)
 confects <- limma_confects(fit.reduced, coef=4, fdr=0.05)
 make_dm_plots(dm = dm ,name=name , mx=Mval4, beta=beta, groups=crpgrp, confects=confects)
+
+pdf("epic_11_dm08.pdf")
+make_dm_plots(dm = dm ,name=name , mx=Mval4, beta=beta, groups=crpgrp, confects=confects)
+dev.off()
+
 t0_crp_in_blood <- list("dma"=dma, "dm_up"=dm_up, "dm_dn"=dm_dn, "confects"=confects)
 write.table(dma,file="dm8.tsv",quote=FALSE,sep="\t")
 
@@ -463,6 +523,11 @@ length(dm_up)
 length(dm_dn)
 confects <- limma_confects(fit.reduced, coef=4, fdr=0.05)
 make_dm_plots(dm = dm ,name=name , mx=Mval4, beta=beta, groups=crpgrp, confects=confects)
+
+pdf("epic_12_dm09.pdf")
+make_dm_plots(dm = dm ,name=name , mx=Mval4, beta=beta, groups=crpgrp, confects=confects)
+dev.off()
+
 t0_crp_in_blood <- list("dma"=dma, "dm_up"=dm_up, "dm_dn"=dm_dn, "confects"=confects)
 write.table(dma,file="dm9.tsv",quote=FALSE,sep="\t")
 
@@ -498,6 +563,11 @@ length(dm_up)
 length(dm_dn)
 confects <- limma_confects(fit.reduced, coef=4, fdr=0.05)
 make_dm_plots(dm = dm ,name=name , mx=Mval5, beta=beta, groups=timepoint, confects=confects)
+
+pdf("epic_13_dm10.pdf")
+make_dm_plots(dm = dm ,name=name , mx=Mval5, beta=beta, groups=timepoint, confects=confects)
+dev.off()
+
 t0vPod_ex_blood <- list("dma"=dma, "dm_up"=dm_up, "dm_dn"=dm_dn, "confects"=confects)
 write.table(dma,file="dm10.tsv",quote=FALSE,sep="\t")
 write.table(confects$table,file="dm10c.tsv",quote=FALSE,sep="\t")
@@ -518,7 +588,7 @@ capture.output(
 head(res$enrichment_result,20)
 unlink("t0vPod_ex_blood.html")
 capture.output(
-    mitch_plots(res,outfile="t0vPod_ex_blood.pdf")
+    mitch_plots(res,outfile="epic_14_mitch_t0vPod_ex_blood.pdf")
     , file = "/dev/null", append = FALSE,
     type = c("output", "message"), split = FALSE)
 
@@ -552,6 +622,11 @@ length(dm_up)
 length(dm_dn)
 confects <- limma_confects(fit.reduced, coef=4, fdr=0.05)
 make_dm_plots(dm = dm ,name=name , mx=Mval6, beta=beta, groups=crpgrp, confects=confects)
+
+pdf("epic_15_dm11.pdf")
+make_dm_plots(dm = dm ,name=name , mx=Mval6, beta=beta, groups=crpgrp, confects=confects)
+dev.off()
+
 t1_crp_ex_blood <- list("dma"=dma, "dm_up"=dm_up, "dm_dn"=dm_dn, "confects"=confects)
 write.table(dma,file="dm11.tsv",quote=FALSE,sep="\t")
 write.table(confects$table,file="dm11c.tsv",quote=FALSE,sep="\t")
@@ -572,7 +647,7 @@ capture.output(
 head(res$enrichment_result,20)
 unlink("t1_crp_ex_blood.html")
 capture.output( 
-    mitch_plots(res,outfile="t1_crp_ex_blood.pdf")
+    mitch_plots(res,outfile="epic_16_mitch_t1_crp_ex_blood.pdf")
     , file = "/dev/null", append = FALSE,
     type = c("output", "message"), split = FALSE)
 
@@ -605,6 +680,11 @@ length(dm_up)
 length(dm_dn)
 confects <- limma_confects(fit.reduced, coef=4, fdr=0.05)
 make_dm_plots(dm = dm ,name=name , mx=Mval6, beta=beta, groups=crpgrp, confects=confects)
+
+pdf("epic_17_dm12.pdf")
+make_dm_plots(dm = dm ,name=name , mx=Mval6, beta=beta, groups=crpgrp, confects=confects)
+dev.off()
+
 t0_crp_ex_blood <- list("dma"=dma, "dm_up"=dm_up, "dm_dn"=dm_dn, "confects"=confects)
 write.table(dma,file="dm12.tsv",quote=FALSE,sep="\t")
 write.table(confects$table,file="dm12c.tsv",quote=FALSE,sep="\t")
@@ -626,7 +706,7 @@ capture.output(
 head(res$enrichment_result,20)
 unlink("t0_crp_ex_blood.html")
 capture.output(
-    mitch_plots(res,outfile="t0_crp_ex_blood.pdf")
+    mitch_plots(res,outfile="epic_18_mitch_t0_crp_ex_blood.pdf")
     , file = "/dev/null", append = FALSE,
     type = c("output", "message"), split = FALSE)
 
@@ -745,12 +825,22 @@ aucres <- data.frame(ngenes,unlist(aucs))
 plot(aucres$ngenes,aucres$unlist.aucs.,xlab="number of genes in panel",ylab="AUC")
 grid()
 
+pdf("epic_19_ROCp.pdf")
+plot(aucres$ngenes,aucres$unlist.aucs.,xlab="number of genes in panel",ylab="AUC")
+grid()
+dev.off()
 
 ngenes <- c(2,5,10,20,30,40,50,60,70,80,90,100,125,150,200,250,300,400,500)
 aucs <- lapply(ngenes,ROCc)
 aucres <- data.frame(ngenes,unlist(aucs))
 plot(aucres$ngenes,aucres$unlist.aucs.,xlab="number of genes in panel",ylab="AUC")
 grid()
+
+pdf("epic_20_ROCc.pdf")
+plot(aucres$ngenes,aucres$unlist.aucs.,xlab="number of genes in panel",ylab="AUC")
+grid()
+dev.off()
+
 
 ```
 

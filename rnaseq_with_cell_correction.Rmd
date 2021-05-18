@@ -30,7 +30,6 @@ suppressPackageStartupMessages({
     library("eulerr")
     library("limma")
     library("topconfects")
-    library("gplots")
 })
 
 ```
@@ -120,10 +119,20 @@ cv[order(-cv)]
 plot(cs,cv,main="cell abundance versus SD")
 text(cs,cv+0.5,label=names(cs))
 
+pdf("rnaseq_wcc_01_cscv.pdf")
+plot(cs,cv,main="cell abundance versus SD")
+text(cs,cv+0.5,label=names(cs))
+dev.off()
+
 colfunc <- colorRampPalette(c("blue", "white", "red"))
 
 heatmap.2( dec, col=colfunc(25),scale="row",
  trace="none",margins = c(10,15), cexRow=.7, cexCol=.8,  main="cell type abundances")
+
+pdf("rnaseq_wcc_02_cellheat.pdf")
+heatmap.2( dec, col=colfunc(25),scale="row",
+ trace="none",margins = c(10,15), cexRow=.7, cexCol=.8,  main="cell type abundances")
+dev.off()
 
 samplesheet <- cbind(samplesheet,dec)
 
@@ -189,6 +198,62 @@ boxplot(dec_t0_lo$pDCs , dec_t0_hi$pDCs , dec_po_lo$pDCs ,  dec_po_hi$pDCs ,
 boxplot(dec_t0_lo$Plasmablasts , dec_t0_hi$Plasmablasts , dec_po_lo$Plasmablasts ,  dec_po_hi$Plasmablasts ,
   ylim=c(0,1),names=c("t0 lo","t0 hi","po lo","po hi"),main="Plasmablasts")
 
+pdf("rnaseq_wcc_03_cellboxplots.pdf")
+
+boxplot(dec_t0_lo$NK , dec_t0_hi$NK, dec_po_lo$NK,  dec_po_hi$NK ,
+  ylim=c(0,15),names=c("t0 lo","t0 hi","po lo","po hi"),main="NK")
+t.test(dec_t0_lo$NK , dec_po_lo$NK)
+
+boxplot(dec_t0_lo$T.CD8.Memory , dec_t0_hi$T.CD8.Memory, dec_po_lo$T.CD8.Memory,  dec_po_hi$T.CD8.Memory ,
+  ylim=c(0,40),names=c("t0 lo","t0 hi","po lo","po hi"),main="T.CD8.Memory")
+
+boxplot(dec_t0_lo$T.CD8.Memory , dec_t0_hi$T.CD8.Memory, dec_po_lo$T.CD8.Memory,  dec_po_hi$T.CD8.Memory ,
+  ylim=c(0,40),names=c("t0 lo","t0 hi","po lo","po hi"),main="T.CD8.Memory")
+
+boxplot(dec_t0_lo$T.CD4.Naive , dec_t0_hi$T.CD4.Naive, dec_po_lo$T.CD4.Naive,  dec_po_hi$T.CD4.Naive ,
+  ylim=c(0,25),names=c("t0 lo","t0 hi","po lo","po hi"),main="T.CD4.Naive")
+
+boxplot(dec_t0_lo$T.CD8.Naive , dec_t0_hi$T.CD8.Naive, dec_po_lo$T.CD8.Naive,  dec_po_hi$T.CD8.Naive ,
+  ylim=c(0,15),names=c("t0 lo","t0 hi","po lo","po hi"),main="T.CD8.Naive")
+
+boxplot(dec_t0_lo$B.Naive , dec_t0_hi$B.Naive, dec_po_lo$B.Naive,  dec_po_hi$B.Naive ,
+  ylim=c(0,10),names=c("t0 lo","t0 hi","po lo","po hi"),main="B.Naive")
+
+boxplot(dec_t0_lo$T.CD4.Memory , dec_t0_hi$T.CD4.Memory, dec_po_lo$T.CD4.Memory,  dec_po_hi$T.CD4.Memory ,
+  ylim=c(0,10),names=c("t0 lo","t0 hi","po lo","po hi"),main="T.CD4.Memory")
+
+boxplot(dec_t0_lo$MAIT , dec_t0_hi$MAIT, dec_po_lo$MAIT,  dec_po_hi$MAIT ,
+  ylim=c(0,15),names=c("t0 lo","t0 hi","po lo","po hi"),main="MAIT")
+
+boxplot(dec_t0_lo$T.gd.Vd2 , dec_t0_hi$T.gd.Vd2 , dec_po_lo$T.gd.Vd2 ,  dec_po_hi$T.gd.Vd2 ,
+  ylim=c(0,5),names=c("t0 lo","t0 hi","po lo","po hi"),main="T.gd.Vd2")
+
+boxplot(dec_t0_lo$Neutrophils.LD , dec_t0_hi$Neutrophils.LD , dec_po_lo$Neutrophils.LD ,  dec_po_hi$Neutrophils.LD ,
+  ylim=c(0,50),names=c("t0 lo","t0 hi","po lo","po hi"),main="Neutrophils.LD")
+
+boxplot(dec_t0_lo$T.gd.non.Vd2 , dec_t0_hi$T.gd.non.Vd2 , dec_po_lo$T.gd.non.Vd2 ,  dec_po_hi$T.gd.non.Vd2 ,
+  ylim=c(0,1),names=c("t0 lo","t0 hi","po lo","po hi"),main="T.gd.non.Vd2")
+
+boxplot(dec_t0_lo$Basophils.LD , dec_t0_hi$Basophils.LD , dec_po_lo$Basophils.LD ,  dec_po_hi$Basophils.LD ,
+  ylim=c(0,4),names=c("t0 lo","t0 hi","po lo","po hi"),main="Basophils.LD")
+
+boxplot(dec_t0_lo$Monocytes.NC.I , dec_t0_hi$Monocytes.NC.I , dec_po_lo$Monocytes.NC.I ,  dec_po_hi$Monocytes.NC.I ,
+  ylim=c(0,20),names=c("t0 lo","t0 hi","po lo","po hi"),main="Monocytes.NC.I")
+
+boxplot(dec_t0_lo$B.Memory , dec_t0_hi$B.Memory , dec_po_lo$B.Memory ,  dec_po_hi$B.Memory ,
+  ylim=c(0,20),names=c("t0 lo","t0 hi","po lo","po hi"),main="B.Memory")
+
+boxplot(dec_t0_lo$mDCs , dec_t0_hi$mDCs , dec_po_lo$mDCs ,  dec_po_hi$mDCs ,
+  ylim=c(0,1),names=c("t0 lo","t0 hi","po lo","po hi"),main="mDCs")
+
+boxplot(dec_t0_lo$pDCs , dec_t0_hi$pDCs , dec_po_lo$pDCs ,  dec_po_hi$pDCs ,
+  ylim=c(0,1),names=c("t0 lo","t0 hi","po lo","po hi"),main="pDCs")
+
+boxplot(dec_t0_lo$Plasmablasts , dec_t0_hi$Plasmablasts , dec_po_lo$Plasmablasts ,  dec_po_hi$Plasmablasts ,
+  ylim=c(0,1),names=c("t0 lo","t0 hi","po lo","po hi"),main="Plasmablasts")
+
+dev.off()
+
 
 ```
 
@@ -201,6 +266,15 @@ plot(cmdscale(dist(t(xx))), xlab="Coordinate 1", ylab="Coordinate 2",
 text(cmdscale(dist(t(xx))), labels=colnames(xx),cex=1.3)
 heatmap.2(cor(xx),trace="none",margins = c(10,10), main="pearson correlation heatmap")
 heatmap.2(cor(xx,method="s"),trace="none",margins = c(10,10), main="spearman correlation heatmap")
+
+pdf("rnaseq_wcc_04_mds.pdf")
+plot(cmdscale(dist(t(xx))), xlab="Coordinate 1", ylab="Coordinate 2",
+  type = "p", col="gray", pch=19, cex.axis=1.3,cex.lab=1.3, bty='l')
+text(cmdscale(dist(t(xx))), labels=colnames(xx),cex=1.3)
+heatmap.2(cor(xx),trace="none",margins = c(10,10), main="pearson correlation heatmap")
+heatmap.2(cor(xx,method="s"),trace="none",margins = c(10,10), main="spearman correlation heatmap")
+dev.off()
+
 
 ```
 
@@ -224,6 +298,7 @@ z <- results(res)
 vsd <- vst(dds, blind=FALSE)
 zz <-cbind(as.data.frame(z),assay(vsd))
 dge <- as.data.frame(zz[order(zz$pvalue),])
+t0_v_pod <- dge
 dge[1:10,1:6]
 
 sig <- subset(dge,padj<0.05)
@@ -253,6 +328,30 @@ heatmap.2(  as.matrix(dge[1:50,c(7:ncol(dge))]), col=colfunc(25),scale="row",
   ColSideColors=colCols ,
   trace="none",margins = c(6,10), cexRow=.6, cexCol=.5, main="Top 50 genes")
 #t0_v_pod <- dge
+
+pdf("rnaseq_wcc_05_de01.pdf")
+# smear
+plot(log2(dge$baseMean),dge$log2FoldChange,cex=0.6,cex.axis=1.2,cex.lab=1.3,
+  xlab="log2 base mean",
+  ylim=c(-3,3),ylab="log2 fold change" ,pch=19,col="#838383")
+points(log2(sig$baseMean),sig$log2FoldChange,cex=0.6,pch=19,col="red")
+mtext((HEADER),cex=1.2)
+top <- head(sig,20)
+# volcano
+plot(dge$log2FoldChange, -log2(dge$pvalue) ,cex=0.6, cex.lab=1.3,cex.axis=1.2,
+ xlim=c(-3,3),xlab="log2 fold change", ylab="-log2 p-value" ,pch=19,col="#838383")
+points(sig$log2FoldChange, -log2(sig$pvalue),cex=0.6,pch=19,col="red")
+mtext((HEADER),cex=1.2)
+# top N gene heatmap
+colCols <- as.character(samplesheet$timepoint)
+colCols <- gsub("0","gray",colCols)
+colCols <- gsub("1","black",colCols)
+
+colfunc <- colorRampPalette(c("blue", "white", "red"))
+heatmap.2(  as.matrix(dge[1:50,c(7:ncol(dge))]), col=colfunc(25),scale="row",
+  ColSideColors=colCols ,
+  trace="none",margins = c(6,10), cexRow=.6, cexCol=.5, main="Top 50 genes")
+dev.off()
 
 ```
 
@@ -301,6 +400,30 @@ heatmap.2(  as.matrix(dge[1:50,c(7:ncol(dge))]), col=colfunc(25),scale="row",
   trace="none",margins = c(6,10), cexRow=.6, cexCol=.5, main="Top 50 genes")
 pod_crp <- dge
 write.table(dge,file="pod_crp_rna.tsv",sep="\t",quote=FALSE)
+
+pdf("rnaseq_wcc_06_de02.pdf")
+# smear
+plot(log2(dge$baseMean),dge$log2FoldChange,cex=0.6,cex.axis=1.2,cex.lab=1.3, xlab="log2 base mean",
+  ylim=c(-3,3),ylab="log2 fold change" ,pch=19,col="#838383")
+points(log2(sig$baseMean),sig$log2FoldChange,cex=0.6,pch=19,col="red")
+mtext((HEADER),cex=1.2)
+top <- head(sig,20)
+# volcano
+plot(dge$log2FoldChange, -log2(dge$pvalue) ,cex=0.6, cex.lab=1.3,cex.axis=1.2,
+ xlim=c(-3,3),xlab="log2 fold change", ylab="-log2 p-value" ,pch=19,col="#838383")
+points(sig$log2FoldChange, -log2(sig$pvalue),cex=0.6,pch=19,col="red")
+mtext((HEADER),cex=1.2)
+# top N gene heatmap
+colCols <- as.character(ss$CrpGroup)
+colCols <- gsub("1","orange",colCols)
+colCols <- gsub("0","yellow",colCols)
+colfunc <- colorRampPalette(c("blue", "white", "red"))
+heatmap.2(  as.matrix(dge[1:50,c(7:ncol(dge))]), col=colfunc(25),scale="row",
+  ColSideColors=colCols ,
+  trace="none",margins = c(6,10), cexRow=.6, cexCol=.5, main="Top 50 genes")
+pod_crp <- dge
+write.table(dge,file="pod_crp_rna.tsv",sep="\t",quote=FALSE)
+dev.off()
 
 ```
 
@@ -439,6 +562,23 @@ points(ng,c_roc,type="b",col="red")
 mtext("blue: top p-value genes, red:top confect genes")
 grid()
 
+
+pdf("rnaseq_wcc_07_roc.pdf")
+
+plot(ng,p_roc,type="b",ylim=c(0.7,1),col="blue",xlab="no. genes", ylab="AUC")
+points(ng,c_roc,type="b",col="red")
+mtext("blue: top p-value genes, red:top confect genes")
+grid()
+
+# zoom in
+plot(ng,p_roc,type="b",xlim=c(0,100),col="blue",xlab="no. genes", ylab="AUC")
+points(ng,c_roc,type="b",col="red")
+mtext("blue: top p-value genes, red:top confect genes")
+grid()
+
+dev.off()
+
+
 ```
 
 From this we can see that p-value genes show better discriminitory power compared to topconfect genes at least when the number of gene$
@@ -465,6 +605,15 @@ colfunc <- colorRampPalette(c("blue", "white", "red"))
 heatmap.2(  as.matrix(dge[1:15,c(7:ncol(dge))]), col=colfunc(25),scale="row",
   ColSideColors=colCols ,
  trace="none",margins = c(10,15), cexRow=1, cexCol=.7, main="Top 15 genes")
+
+pdf("rnaseq_wcc_08_roc-heat.pdf")
+
+colfunc <- colorRampPalette(c("blue", "white", "red"))
+heatmap.2(  as.matrix(dge[1:15,c(7:ncol(dge))]), col=colfunc(25),scale="row",
+  ColSideColors=colCols ,
+ trace="none",margins = c(10,15), cexRow=1, cexCol=.7, main="Top 15 genes")
+
+dev.off()
 
 ```
 
@@ -514,6 +663,32 @@ heatmap.2(  as.matrix(dge[1:50,c(7:ncol(dge))]), col=colfunc(25),scale="row",
  trace="none",margins = c(6,10), cexRow=.6, cexCol=.5, main="Top 50 genes")
 t0_crp <- dge
 write.table(dge,file="t0_crp_rna.tsv",sep="\t",quote=FALSE)
+
+pdf("rnaseq_wcc_09_de03.pdf")
+# smear
+plot(log2(dge$baseMean),dge$log2FoldChange,cex=0.6,cex.axis=1.2,cex.lab=1.3, xlab="log2 base mean",
+  ylim=c(-3,3),ylab="log2 fold change" ,pch=19,col="#838383")
+points(log2(sig$baseMean),sig$log2FoldChange,cex=0.6,pch=19,col="red")
+mtext((HEADER),cex=1.2)
+top <- head(sig,20)
+# volcano
+plot(dge$log2FoldChange, -log2(dge$pvalue) ,cex=0.6, cex.lab=1.3,cex.axis=1.2,
+ xlim=c(-3,3),xlab="log2 fold change", ylab="-log2 p-value" ,pch=19,col="#838383")
+points(sig$log2FoldChange, -log2(sig$pvalue),cex=0.6,pch=19,col="red")
+mtext((HEADER),cex=1.2)
+# top N gene heatmap
+colCols <- as.character(ss$CrpGroup)
+colCols <- gsub("1","orange",colCols)
+colCols <- gsub("0","yellow",colCols)
+
+colfunc <- colorRampPalette(c("blue", "white", "red"))
+heatmap.2(  as.matrix(dge[1:50,c(7:ncol(dge))]), col=colfunc(25),scale="row",
+  ColSideColors=colCols ,
+ trace="none",margins = c(6,10), cexRow=.6, cexCol=.5, main="Top 50 genes")
+t0_crp <- dge
+write.table(dge,file="t0_crp_rna.tsv",sep="\t",quote=FALSE)
+dev.off()
+
 
 ```
 
@@ -566,6 +741,30 @@ write.table(dge,file="t0_vs_pod_lowCRP_rna.tsv",sep="\t",quote=FALSE)
 t0_vs_pod_lowCRP_up <- rownames( subset(dge,padj<0.05 & log2FoldChange > 0 ) )
 t0_vs_pod_lowCRP_dn <- rownames( subset(dge,padj<0.05 & log2FoldChange < 0 ) )
 
+
+pdf("rnaseq_wcc_10_de04.pdf")
+# smear
+plot(log2(dge$baseMean),dge$log2FoldChange,cex=0.6,cex.axis=1.2,cex.lab=1.3, xlab="log2 base mean",
+  ylim=c(-3,3),ylab="log2 fold change" ,pch=19,col="#838383")
+points(log2(sig$baseMean),sig$log2FoldChange,cex=0.6,pch=19,col="red")
+mtext((HEADER),cex=1.2)
+top <- head(sig,20)
+# volcano
+plot(dge$log2FoldChange, -log2(dge$pvalue) ,cex=0.6, cex.lab=1.3,cex.axis=1.2,
+ xlim=c(-3,3),xlab="log2 fold change", ylab="-log2 p-value" ,pch=19,col="#838383")
+points(sig$log2FoldChange, -log2(sig$pvalue),cex=0.6,pch=19,col="red")
+mtext((HEADER),cex=1.2)
+# top N gene heatmap
+colCols <- as.character(ss$timepoint)
+colCols <- gsub("1","orange",colCols)
+colCols <- gsub("0","yellow",colCols)
+
+colfunc <- colorRampPalette(c("blue", "white", "red"))
+heatmap.2(  as.matrix(dge[1:50,c(7:ncol(dge))]), col=colfunc(25),scale="row",
+  ColSideColors=colCols ,
+ trace="none",margins = c(6,10), cexRow=.6, cexCol=.5, main="Top 50 genes")
+dev.off()
+
 ```
 
 # DE analysis baseline versus post-op (high CRP)
@@ -617,6 +816,30 @@ write.table(dge,file="t0_vs_pod_highCRP_rna.tsv",sep="\t",quote=FALSE)
 t0_vs_pod_highCRP_up <- rownames( subset(dge,padj<0.05 & log2FoldChange > 0 ) )
 t0_vs_pod_highCRP_dn <- rownames( subset(dge,padj<0.05 & log2FoldChange < 0 ) )
 
+pdf("rnaseq_wcc_11_de05.pdf")
+# smear
+plot(log2(dge$baseMean),dge$log2FoldChange,cex=0.6,cex.axis=1.2,cex.lab=1.3, xlab="log2 base mean",
+  ylim=c(-3,3),ylab="log2 fold change" ,pch=19,col="#838383")
+points(log2(sig$baseMean),sig$log2FoldChange,cex=0.6,pch=19,col="red")
+mtext((HEADER),cex=1.2)
+top <- head(sig,20)
+# volcano
+plot(dge$log2FoldChange, -log2(dge$pvalue) ,cex=0.6, cex.lab=1.3,cex.axis=1.2,
+ xlim=c(-3,3),xlab="log2 fold change", ylab="-log2 p-value" ,pch=19,col="#838383")
+points(sig$log2FoldChange, -log2(sig$pvalue),cex=0.6,pch=19,col="red")
+mtext((HEADER),cex=1.2)
+# top N gene heatmap
+colCols <- as.character(ss$timepoint)
+colCols <- gsub("1","orange",colCols)
+colCols <- gsub("0","yellow",colCols)
+
+colfunc <- colorRampPalette(c("blue", "white", "red"))
+heatmap.2(  as.matrix(dge[1:50,c(7:ncol(dge))]), col=colfunc(25),scale="row",
+  ColSideColors=colCols ,
+ trace="none",margins = c(6,10), cexRow=.6, cexCol=.5, main="Top 50 genes")
+dev.off()
+
+
 ```
 
 # Compare low and high patterns
@@ -631,6 +854,11 @@ v1 <- list("low CRP up"=t0_vs_pod_lowCRP_up,
     "high CRP dn"=t0_vs_pod_highCRP_dn)
 
 plot(euler(v1),quantities = TRUE, main="Gene overlap")
+
+pdf("rnaseq_wcc_12_venn1.pdf")
+plot(euler(v1),quantities = TRUE, main="Gene overlap")
+dev.off()
+
 
 ```
 
@@ -672,11 +900,17 @@ v1 <- list("low CRP up"=lo_up,
 
 plot(euler(v1),quantities = TRUE, main="Gene set overlap")
 
+pdf("rnaseq_wcc_13_venn2.pdf")
+plot(euler(v1),quantities = TRUE, main="Gene set overlap")
+dev.off()
+
 unlink("t0_v_pod_lohi_mitch_sig.html")
 capture.output(
     mitch_report(res, "t0_v_pod_lohi_mitch_sig.html")
     , file = "/dev/null", append = FALSE,
     type = c("output", "message"), split = FALSE)
+
+mitch_plots(res, "t0_v_pod_lohi_mitch_sig.pdf")
 
 # prioritisation by statistical significance
 res <- mitch_calc(y, genesets, priority="effect",resrows=50)
@@ -688,6 +922,8 @@ capture.output(
     , file = "/dev/null", append = FALSE,
     type = c("output", "message"), split = FALSE)
 
+mitch_plots(res, "t0_v_pod_lohi_mitch_eff.pdf")
+
 # prioritisation by discordance
 res <- mitch_calc(y, genesets, priority="SD",resrows=50)
 head(res$enrichment_result,20)
@@ -697,6 +933,8 @@ capture.output(
     mitch_report(res, "t0_v_pod_lohi_mitch_sd.html")
     , file = "/dev/null", append = FALSE,
     type = c("output", "message"), split = FALSE)
+
+mitch_plots(res, "t0_v_pod_lohi_mitch_sd.pdf")
 
 ```
 
