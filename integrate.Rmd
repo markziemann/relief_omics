@@ -29,7 +29,9 @@ The contrasts I'm looking at are:
 
 ```{r,packages}
 suppressPackageStartupMessages({
+    library("gplots")
     library("mitch")
+    library("kableExtra")
 })
 ```
 
@@ -109,9 +111,11 @@ t0_crp <- z
 ## Obtaining reactome gene sets
 
 ```{r,reactome}
-download.file("https://reactome.org/download/current/ReactomePathways.gmt.zip", destfile="ReactomePathways.gmt.zip")
-unzip("ReactomePathways.gmt.zip")
+
+#download.file("https://reactome.org/download/current/ReactomePathways.gmt.zip", destfile="ReactomePathways.gmt.zip")
+#unzip("ReactomePathways.gmt.zip")
 genesets <- gmt_import("ReactomePathways.gmt")
+
 ```
 
 ## Integrative pathway analysis
@@ -121,55 +125,153 @@ For each of the three contrast indicated above I have set up mitch analyses.
 ```{r,mitch}
 
 # t0_v_pod
-head(t0_v_pod)
+head(t0_v_pod) %>% kbl() %>% kable_paper("hover", full_width = F)
 dim(t0_v_pod)
 
 capture.output(
-    res <- mitch_calc(x=t0_v_pod, genesets=genesets,priority="significance")
+    res <- mitch_calc(x=t0_v_pod, genesets=genesets,priority="significance", resrows = 30)
     , file = "/dev/null", append = FALSE,
     type = c("output", "message"), split = FALSE)
 
-head(res$enrichment_result,30)
+head(res$enrichment_result,30) %>% kbl() %>% kable_paper("hover", full_width = F)
 
-unlink("t0_v_pod_int.html")
+unlink("int_t0_v_pod_sig.html")
 capture.output(
-    mitch_report(res, "t0_v_pod_int.html")
+    mitch_report(res, "int_t0_v_pod_sig.html")
     , file = "/dev/null", append = FALSE,
     type = c("output", "message"), split = FALSE)
+
+mitch_plots(res,"int_01_t0_v_pod_sig.pdf")
+
+# new heatmap
+colfunc <- colorRampPalette(c("blue", "white", "red"))
+top <- res$enrichment_result[1:50,c(4,5)]
+rownames(top) <- res$enrichment_result[1:50,1]
+pdf("int_01_t0_v_pod_sig_heatmap.pdf",width=8,height=8)
+heatmap.2( as.matrix(top), col=colfunc(25),scale="none",
+ trace="none",margins = c(10,28), cexRow=.6, Colv=FALSE, dendrogram="row", cexCol=.8,  main="T0 v POD")
+dev.off()
+
+capture.output(
+    res <- mitch_calc(x=t0_v_pod, genesets=genesets,priority="effect" , resrows = 30)
+    , file = "/dev/null", append = FALSE,
+    type = c("output", "message"), split = FALSE)
+
+head(res$enrichment_result,30) %>% kbl() %>% kable_paper("hover", full_width = F)
+
+unlink("int_t0_v_pod_eff.html")
+capture.output(
+    mitch_report(res, "int_t0_v_pod_eff.html")
+    , file = "/dev/null", append = FALSE,
+    type = c("output", "message"), split = FALSE)
+
+mitch_plots(res,"int_01_t0_v_pod_eff.pdf")
+
+top <- res$enrichment_result[1:50,c(4,5)]
+rownames(top) <- res$enrichment_result[1:50,1]
+pdf("int_01_t0_v_pod_eff_heatmap.pdf",width=8,height=8)
+heatmap.2( as.matrix(top), col=colfunc(25),scale="none",
+ trace="none",margins = c(10,28), cexRow=.6, Colv=FALSE, dendrogram="row", cexCol=.8,  main="T0 v POD")
+dev.off()
+
 
 # pod_crp
-head(pod_crp)
+head(pod_crp) %>% kbl() %>% kable_paper("hover", full_width = F)
 dim(pod_crp)
 
 capture.output(
-    res <- mitch_calc(x=pod_crp, genesets=genesets,priority="significance")
+    res <- mitch_calc(x=pod_crp, genesets=genesets,priority="significance", resrows = 30)
     , file = "/dev/null", append = FALSE,
     type = c("output", "message"), split = FALSE)
 
-head(res$enrichment_result,30)
+head(res$enrichment_result,30) %>% kbl() %>% kable_paper("hover", full_width = F)
 
-unlink("pod_crp_int.html")
+unlink("int_pod_crp_sig.html")
 capture.output(
-    mitch_report(res, "pod_crp_int.html")
+    mitch_report(res, "int_pod_crp_sig.html")
     , file = "/dev/null", append = FALSE,
     type = c("output", "message"), split = FALSE)
+
+mitch_plots(res,"int_02_pod_crp_sig.pdf")
+
+top <- res$enrichment_result[1:50,c(4,5)]
+rownames(top) <- res$enrichment_result[1:50,1]
+pdf("int_02_pod_crp_sig_heatmap.pdf",width=8,height=8)
+heatmap.2( as.matrix(top), col=colfunc(25),scale="none",
+ trace="none",margins = c(10,28), cexRow=.6, Colv=FALSE, dendrogram="row", cexCol=.8,  main="POD CRP")
+dev.off()
+
+capture.output(
+    res <- mitch_calc(x=pod_crp, genesets=genesets,priority="effect", resrows = 30)
+    , file = "/dev/null", append = FALSE,
+    type = c("output", "message"), split = FALSE)
+
+head(res$enrichment_result,30) %>% kbl() %>% kable_paper("hover", full_width = F)
+
+unlink("int_pod_crp_eff.html")
+capture.output(
+    mitch_report(res, "int_pod_crp_eff.html")
+    , file = "/dev/null", append = FALSE,
+    type = c("output", "message"), split = FALSE)
+
+mitch_plots(res,"int_02_pod_crp_eff.pdf")
+
+top <- res$enrichment_result[1:50,c(4,5)]
+rownames(top) <- res$enrichment_result[1:50,1]
+pdf("int_02_pod_crp_eff_heatmap.pdf",width=8,height=8)
+heatmap.2( as.matrix(top), col=colfunc(25),scale="none",
+ trace="none",margins = c(10,28), cexRow=.6, Colv=FALSE, dendrogram="row", cexCol=.8,  main="POD CRP")
+dev.off()
+
 
 # t0_crp
-head(t0_crp)
+head(t0_crp) %>% kbl() %>% kable_paper("hover", full_width = F)
 dim(t0_crp)
 
 capture.output(
-    res <- mitch_calc(x=t0_crp, genesets=genesets,priority="significance")
+    res <- mitch_calc(x=t0_crp, genesets=genesets,priority="significance", resrows = 30)
     , file = "/dev/null", append = FALSE,
     type = c("output", "message"), split = FALSE)
 
-head(res$enrichment_result,30)
+head(res$enrichment_result,30) %>% kbl() %>% kable_paper("hover", full_width = F)
 
-unlink("t0_crp_int.html")
+unlink("int_t0_crp_sig.html")
 capture.output(
-    mitch_report(res, "t0_crp_int.html")
+    mitch_report(res, "int_t0_crp_sig.html")
     , file = "/dev/null", append = FALSE,
     type = c("output", "message"), split = FALSE)
+
+mitch_plots(res,"int_03_t0_crp_sig.pdf")
+
+top <- res$enrichment_result[1:50,c(4,5)]
+rownames(top) <- res$enrichment_result[1:50,1]
+pdf("int_03_t0_crp_sig_heatmap.pdf",width=8,height=8)
+heatmap.2( as.matrix(top), col=colfunc(25),scale="none",
+ trace="none",margins = c(10,28), cexRow=.6, Colv=FALSE, dendrogram="row", cexCol=.8,  main="t0 CRP")
+dev.off()
+
+capture.output(
+    res <- mitch_calc(x=t0_crp, genesets=genesets,priority="effect", resrows = 30)
+    , file = "/dev/null", append = FALSE,
+    type = c("output", "message"), split = FALSE)
+
+head(res$enrichment_result,30) %>% kbl() %>% kable_paper("hover", full_width = F)
+
+unlink("int_t0_crp_eff.html")
+capture.output(
+    mitch_report(res, "int_t0_crp_eff.html")
+    , file = "/dev/null", append = FALSE,
+    type = c("output", "message"), split = FALSE)
+
+mitch_plots(res,"int_03_t0_crp_eff.pdf")
+
+top <- res$enrichment_result[1:50,c(4,5)]
+rownames(top) <- res$enrichment_result[1:50,1]
+pdf("int_03_t0_crp_eff_heatmap.pdf",width=8,height=8)
+heatmap.2( as.matrix(top), col=colfunc(25),scale="none",
+ trace="none",margins = c(10,28), cexRow=.6, Colv=FALSE, dendrogram="row", cexCol=.8,  main="t0 CRP")
+dev.off()
+
 
 ```
 
