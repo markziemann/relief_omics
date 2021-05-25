@@ -1,0 +1,476 @@
+---
+title: "RELIEF: overview analysis"
+author: "Mark Ziemann"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    fig_width: 9
+    fig_height: 8
+theme: cosmo
+---
+
+## Introduction
+
+Here we will generate some graphs:
+
+
+* To show the number of increased /decreased genes / probes in each contrast
+
+* To show the number of increased /decreased reactome genesets in each contrast
+
+* Other ideas include Euler/Venn and UpSet diagrams
+
+## Packages 
+
+```{r,packages}
+
+suppressPackageStartupMessages({
+    library("gplots")
+    library("mitch")
+    library("kableExtra")
+    library("eulerr")
+    library("UpSetR")    
+    library(ggplot2)
+})
+
+```
+
+## Data import
+
+There are 3 contrasts we are focusing on:
+
+* post-op samples of patients with low CRP compared to high CRP
+
+* baseline samples of patients with low CRP compared to high CRP
+
+* compare pre-op samples to post-op samples
+
+
+```{r,data_import}
+
+rna_podcrp <- read.table("pod_crp_rna.tsv",header=TRUE,sep="\t")
+
+rna_t0crp <- read.table("t0_crp_rna.tsv",header=TRUE,sep="\t")
+
+rna_t0_v_pod <- read.table("t0_v_pod_rna.tsv",header=TRUE,sep="\t")
+
+meth_podcrp <- read.table("dm11.tsv",header=TRUE,sep="\t")
+
+meth_t0crp <- read.table("dm12.tsv",header=TRUE,sep="\t")
+
+meth_t0_v_pod <- read.table("dm10.tsv",header=TRUE,sep="\t")
+
+```
+
+## Number of genes and probes
+
+Here the methylation data is represented by probes, not summarised to gene names.
+
+```{r,degs_dmps}
+
+rna_podcrp_up <- rownames(subset(rna_podcrp, padj < 0.05 & log2FoldChange > 0 ))
+rna_podcrp_dn <- rownames(subset(rna_podcrp, padj < 0.05 & log2FoldChange < 0 ))
+
+rna_t0crp_up <- rownames(subset(rna_t0crp, padj < 0.05 & log2FoldChange > 0 ))
+rna_t0crp_dn <- rownames(subset(rna_t0crp, padj < 0.05 & log2FoldChange <0 ))
+
+rna_t0_v_pod_up <- rownames(subset(rna_t0_v_pod, padj < 0.05 & log2FoldChange > 0 ))
+rna_t0_v_pod_dn <- rownames(subset(rna_t0_v_pod, padj < 0.05 & log2FoldChange < 0 ))
+
+meth_podcrp_up <- rownames(subset(meth_podcrp, adj.P.Val < 0.05 & logFC > 0 ))
+meth_podcrp_dn <- rownames(subset(meth_podcrp, adj.P.Val < 0.05 & logFC < 0 ))
+
+meth_t0crp_up <- rownames(subset(meth_t0crp, adj.P.Val < 0.05 & logFC > 0 ))
+meth_t0crp_dn <- rownames(subset(meth_t0crp, adj.P.Val < 0.05 & logFC < 0 ))
+
+meth_t0_v_pod_up <- rownames(subset(meth_t0_v_pod, adj.P.Val < 0.05 & logFC > 0 ))
+meth_t0_v_pod_dn <- rownames(subset(meth_t0_v_pod, adj.P.Val < 0.05 & logFC < 0 ))
+
+
+xl <- list("RNA POD CRP up"=rna_podcrp_up,
+  "RNA POD CRP down"=rna_podcrp_dn,
+  "RNA t0 CRP up"=rna_t0crp_up,
+  "RNA t0 CRP down"=rna_t0crp_dn,
+  "RNA t0 Vs POD up"=rna_t0_v_pod_up,
+  "RNA t0 Vs POD down"=rna_t0_v_pod_dn,
+  "Meth POD CRP up"=meth_podcrp_up,
+  "Meth POD CRP down"=meth_podcrp_dn,
+  "Meth t0 CRP up"=meth_t0crp_up,
+  "Meth t0 CRP down"=meth_t0crp_dn,
+  "Meth t0 Vs POD up"=meth_t0_v_pod_up,
+  "Meth t0 Vs POD down"=meth_t0_v_pod_dn)
+
+xlr <- sapply(xl,length)
+
+xlr_up <- xlr[grep("up",names(xlr))]
+
+xlr_dn <- xlr[grep("down",names(xlr))]
+
+MAX=max(xlr_up)*1.2
+MIN=-max(xlr_dn)*1.2
+
+par(mar=c(5,5,5,5))
+names(xlr_up) <- gsub(" up","",names(xlr_up))
+barplot(xlr_up,ylim=c(MIN,MAX),cex.names=0.8,ylab="no. genes/probes up- and down-regulated",col="lightblue")
+text(x = (1:length(xlr_up)*1.2)-0.5  , y = xlr_up , label = xlr_up, pos = 3, cex = 1, col = "black")
+barplot(-xlr_dn,ylim=c(MIN,MAX),cex.names=0.5, col="pink",add=T, xaxt='n')
+text(x = (1:length(xlr_up)*1.2)-0.5  , y = -xlr_dn-5000 , label = xlr_dn, pos = 3, cex = 1, col = "black")
+
+
+MAX=max(xlr_up)*1.4
+MIN=-max(xlr_dn)*1.4
+
+par(mar=c(5,15,5,5))
+barplot(xlr_up,xlim=c(MIN,MAX),cex.names=1,main="no. genes/probes up- and down-regulated",col="lightblue",horiz=TRUE,las=1)
+text(y = (1:length(xlr_up)*1.2)-0.75  , x = xlr_up + 5000 , label = xlr_up, pos = 3, cex = 1, col = "black")
+barplot(-xlr_dn,ylim=c(MIN,MAX),cex.names=0.5, col="pink",add=T, yaxt='n',horiz=TRUE,las=1)
+text(y = (1:length(xlr_up)*1.2)-0.75  , x = -xlr_dn-5000 , label = xlr_dn, pos = 3, cex = 1, col = "black")
+
+```
+
+## Number of genes
+
+Here the methylation data is summarised to gene names.
+RNA-seq data is also summarised to gene names.
+
+```{r,degs_dmgs}
+
+rna_podcrp_up <- rownames(subset(rna_podcrp, padj < 0.05 & log2FoldChange > 0 ))
+if (length(rna_podcrp_up)>0) { rna_podcrp_up <- unique(sapply(strsplit(rna_podcrp_up," "),"[[",2)) }
+
+rna_podcrp_dn <- rownames(subset(rna_podcrp, padj < 0.05 & log2FoldChange < 0 ))
+if (length(rna_podcrp_dn)>0) { rna_podcrp_dn <- unique(sapply(strsplit(rna_podcrp_dn," "),"[[",2)) }
+
+rna_t0crp_up <- rownames(subset(rna_t0crp, padj < 0.05 & log2FoldChange > 0 ))
+if (length(rna_t0crp_up)>0) { rna_t0crp_up <- unique(sapply(strsplit(rna_t0crp_up," "),"[[",2)) }
+
+rna_t0crp_dn <- rownames(subset(rna_t0crp, padj < 0.05 & log2FoldChange <0 ))
+if (length(rna_t0crp_dn)>0) { rna_t0crp_dn <- unique(sapply(strsplit(rna_t0crp_dn," "),"[[",2)) }
+
+rna_t0_v_pod_up <- rownames(subset(rna_t0_v_pod, padj < 0.05 & log2FoldChange > 0 ))
+if (length(rna_t0_v_pod_up)>0) { rna_t0_v_pod_up <- unique(sapply(strsplit(rna_t0_v_pod_up," "),"[[",2)) }
+
+rna_t0_v_pod_dn <- rownames(subset(rna_t0_v_pod, padj < 0.05 & log2FoldChange < 0 ))
+if (length(rna_t0_v_pod_dn)>0) { rna_t0_v_pod_dn <- unique(sapply(strsplit(rna_t0_v_pod_dn," "),"[[",2)) }
+
+g <- subset(meth_podcrp, adj.P.Val < 0.05 & logFC > 0 )$UCSC_RefGene_Name
+g<-g[which(g!="")]
+g<-sapply(strsplit(g,";"),"[[",1)
+meth_podcrp_up <- unique(g)
+
+g <- subset(meth_podcrp, adj.P.Val < 0.05 & logFC < 0 )$UCSC_RefGene_Name
+g<-g[which(g!="")]
+g<-sapply(strsplit(g,";"),"[[",1)
+meth_podcrp_dn <- unique(g)
+
+g <- subset(meth_t0crp, adj.P.Val < 0.05 & logFC > 0 )$UCSC_RefGene_Name
+g<-g[which(g!="")]
+g<-sapply(strsplit(g,";"),"[[",1)
+meth_t0crp_up <- unique(g)
+
+g <- subset(meth_t0crp, adj.P.Val < 0.05 & logFC < 0 )$UCSC_RefGene_Name
+g<-g[which(g!="")]
+g<-sapply(strsplit(g,";"),"[[",1)
+meth_t0crp_dn <- unique(g)
+
+g <- subset(meth_t0_v_pod, adj.P.Val < 0.05 & logFC > 0 )$UCSC_RefGene_Name
+g<-g[which(g!="")]
+g<-sapply(strsplit(g,";"),"[[",1)
+meth_t0_v_pod_up <- unique(g)
+
+g <- subset(meth_t0_v_pod, adj.P.Val < 0.05 & logFC < 0 )$UCSC_RefGene_Name
+g<-g[which(g!="")]
+g<-sapply(strsplit(g,";"),"[[",1)
+meth_t0_v_pod_dn <- unique(g)
+
+
+xl <- list("RNA POD CRP up"=rna_podcrp_up,
+  "RNA POD CRP down"=rna_podcrp_dn,
+  "RNA t0 CRP up"=rna_t0crp_up,
+  "RNA t0 CRP down"=rna_t0crp_dn,
+  "RNA t0 Vs POD up"=rna_t0_v_pod_up,
+  "RNA t0 Vs POD down"=rna_t0_v_pod_dn,
+  "Meth POD CRP up"=meth_podcrp_up,
+  "Meth POD CRP down"=meth_podcrp_dn,
+  "Meth t0 CRP up"=meth_t0crp_up,
+  "Meth t0 CRP down"=meth_t0crp_dn,
+  "Meth t0 Vs POD up"=meth_t0_v_pod_up,
+  "Meth t0 Vs POD down"=meth_t0_v_pod_dn)
+
+xlr <- sapply(xl,length)
+
+xlr_up <- xlr[grep("up",names(xlr))]
+
+xlr_dn <- xlr[grep("down",names(xlr))]
+
+MAX=max(xlr_up)*1.2
+MIN=-max(xlr_dn)*1.2
+
+par(mar=c(5,5,5,5))
+names(xlr_up) <- gsub(" up","",names(xlr_up))
+barplot(xlr_up,ylim=c(MIN,MAX),cex.names=0.8,ylab="no. genes/probes up- and down-regulated",col="lightblue")
+text(x = (1:length(xlr_up)*1.2)-0.5  , y = xlr_up , label = xlr_up, pos = 3, cex = 1, col = "black")
+barplot(-xlr_dn,ylim=c(MIN,MAX),cex.names=0.5, col="pink",add=T, xaxt='n')
+text(x = (1:length(xlr_up)*1.2)-0.5  , y = -xlr_dn-1000 , label = xlr_dn, pos = 3, cex = 1, col = "black")
+
+
+MAX=max(xlr_up)*1.4
+MIN=-max(xlr_dn)*1.4
+
+par(mar=c(5,15,5,5))
+barplot(xlr_up,xlim=c(MIN,MAX),cex.names=1,main="no. genes/probes up- and down-regulated",col="lightblue",horiz=TRUE,las=1)
+text(y = (1:length(xlr_up)*1.2)-0.75  , x = xlr_up + 1000 , label = xlr_up, pos = 3, cex = 1, col = "black")
+barplot(-xlr_dn,ylim=c(MIN,MAX),cex.names=0.5, col="pink",add=T, yaxt='n',horiz=TRUE,las=1)
+text(y = (1:length(xlr_up)*1.2)-0.75  , x = -xlr_dn-1000 , label = xlr_dn, pos = 3, cex = 1, col = "black")
+
+```
+
+## Venn diagrams
+
+Now to identify the gene overlaps (same omics different contrasts).
+
+```{r,rna_venn1}
+
+v1 <- list("RNA POD CRP up"=rna_podcrp_up,
+  "RNA POD CRP down"=rna_podcrp_dn,
+  "RNA t0 CRP up"=rna_t0crp_up,
+  "RNA t0 CRP down"=rna_t0crp_dn,
+  "RNA t0 Vs POD up"=rna_t0_v_pod_up,
+  "RNA t0 Vs POD down"=rna_t0_v_pod_dn)
+
+plot(euler(v1),quantities = TRUE)
+
+
+v1 <- list( "Meth POD CRP up"=meth_podcrp_up,
+  "Meth POD CRP down"=meth_podcrp_dn,
+  "Meth t0 CRP up"=meth_t0crp_up,
+  "Meth t0 CRP down"=meth_t0crp_dn,
+  "Meth t0 Vs POD up"=meth_t0_v_pod_up,
+  "Meth t0 Vs POD down"=meth_t0_v_pod_dn)
+
+plot(euler(v1),quantities = TRUE)
+
+```
+
+Now to identify the overlaps (same contrast different omics).
+
+```{r,rna_venn2}
+
+v1 <- list("RNA POD CRP up"=rna_podcrp_up,
+  "RNA POD CRP down"=rna_podcrp_dn,
+  "Meth POD CRP up"=meth_podcrp_up,
+  "Meth POD CRP down"=meth_podcrp_dn)
+
+plot(euler(v1),quantities = TRUE)
+
+v1 <-  list( "RNA t0 CRP up"=rna_t0crp_up,
+  "RNA t0 CRP down"=rna_t0crp_dn,
+  "Meth t0 CRP up"=meth_t0crp_up,
+  "Meth t0 CRP down"=meth_t0crp_dn)
+
+plot(euler(v1),quantities = TRUE)
+
+
+v1 <- list("RNA t0 Vs POD up"=rna_t0_v_pod_up,
+  "RNA t0 Vs POD down"=rna_t0_v_pod_dn,
+  "Meth t0 Vs POD up"=meth_t0_v_pod_up,
+  "Meth t0 Vs POD down"=meth_t0_v_pod_dn)
+
+plot(euler(v1),quantities = TRUE)
+
+```
+
+## Number of gene sets
+
+Starting with the RNA analysis.
+
+```{r,mitch_rna}
+
+#download.file("https://reactome.org/download/current/ReactomePathways.gmt.zip", destfile="ReactomePathways.gmt.zip")
+#unzip("ReactomePathways.gmt.zip")
+genesets <- gmt_import("ReactomePathways.gmt")
+
+mitch_bubbleplot <- function(res,n) {
+top <- head(res$enrichment_result,n)
+top <- top[order(top$s.dist),]
+top$set <- substr(top$set,start=1,stop=60)
+top$set <- factor(top$set, levels = top$set[order(top$s.dist)])
+ggplot(top, aes(s.dist, set, size = setSize)) + geom_point(aes(colour=-log10(top$p.adjustANOVA)))
+}
+
+gt <- as.data.frame(rownames(rna_podcrp))
+gt$genename <- sapply(strsplit(gt[,1]," "),"[[",2)
+y <-mitch_import(x=rna_podcrp,DEtype="deseq2",geneTable=gt)
+yres <- mitch_calc(y,genesets=genesets)
+mitch_bubbleplot(yres,30)
+rna_podcrp_up <-  subset(yres$enrichment_result,p.adjustANOVA < 0.05 & s.dist > 0)$set
+rna_podcrp_dn <-  subset(yres$enrichment_result,p.adjustANOVA < 0.05 & s.dist < 0)$set
+
+gt <- as.data.frame(rownames(rna_t0crp))
+gt$genename <- sapply(strsplit(gt[,1]," "),"[[",2)
+y <-mitch_import(x=rna_t0crp,DEtype="deseq2",geneTable=gt)
+yres <- mitch_calc(y,genesets=genesets)
+mitch_bubbleplot(yres,30)
+rna_t0crp_up <-  subset(yres$enrichment_result,p.adjustANOVA < 0.05 & s.dist > 0)$set
+rna_t0crp_dn <-  subset(yres$enrichment_result,p.adjustANOVA < 0.05 & s.dist < 0)$set
+
+gt <- as.data.frame(rownames(rna_t0_v_pod))
+gt$genename <- sapply(strsplit(gt[,1]," "),"[[",2)
+y <-mitch_import(x=rna_t0_v_pod,DEtype="deseq2",geneTable=gt)
+yres <- mitch_calc(y,genesets=genesets)
+mitch_bubbleplot(yres,30)
+rna_t0_v_pod_up <-  subset(yres$enrichment_result,p.adjustANOVA < 0.05 & s.dist > 0)$set
+rna_t0_v_pod_dn <-  subset(yres$enrichment_result,p.adjustANOVA < 0.05 & s.dist < 0)$set
+
+```
+
+```{r,mitch_meth}
+
+run_mitch_rank <-function(dma){
+  dmap <- dma[grep("Promoter_Associated",dma$Regulatory_Feature_Group),]
+  dmap[which(dmap$UCSC_RefGene_Name==""),2] <- "NA"
+  dmap$genename <- sapply(strsplit(dmap$UCSC_RefGene_Name,";"),"[[",1)
+  dmap2 <- dmap[,c("genename","t")]
+  rank <- aggregate(. ~ genename,dmap2,mean)
+  rownames(rank) <- rank$genename
+  rank$genename=NULL
+  return(rank)
+}
+
+run_mitch_1d <- function(dma,name) {
+  library("mitch")
+  rank <- run_mitch_rank(dma)
+  res <- mitch_calc(x = rank,genesets = genesets, priority = "significance",resrows=20)
+  return(res)
+}
+
+
+yres <- run_mitch_1d(dma= meth_podcrp , name="meth_podcrp")
+mitch_bubbleplot(yres,30)
+meth_podcrp_up <-  subset(yres$enrichment_result,p.adjustANOVA < 0.05 & s.dist > 0)$set
+meth_podcrp_dn <-  subset(yres$enrichment_result,p.adjustANOVA < 0.05 & s.dist < 0)$set
+
+yres <- run_mitch_1d(dma= meth_t0crp , name="meth_t0crp")
+mitch_bubbleplot(yres,30)
+meth_t0crp_up <-  subset(yres$enrichment_result,p.adjustANOVA < 0.05 & s.dist > 0)$set
+meth_t0crp_dn <-  subset(yres$enrichment_result,p.adjustANOVA < 0.05 & s.dist < 0)$set
+
+yres <- run_mitch_1d(dma= meth_t0_v_pod , name="meth_t0_v_pod")
+mitch_bubbleplot(yres,30)
+meth_t0_v_pod_up <-  subset(yres$enrichment_result,p.adjustANOVA < 0.05 & s.dist > 0)$set
+meth_t0_v_pod_dn <-  subset(yres$enrichment_result,p.adjustANOVA < 0.05 & s.dist < 0)$set
+
+```
+
+## Bar plots on gene sets
+
+```{r,barplot_geneset}
+
+xl <- list("RNA POD CRP up"=rna_podcrp_up,
+  "RNA POD CRP down"=rna_podcrp_dn,
+  "RNA t0 CRP up"=rna_t0crp_up,
+  "RNA t0 CRP down"=rna_t0crp_dn,
+  "RNA t0 Vs POD up"=rna_t0_v_pod_up,
+  "RNA t0 Vs POD down"=rna_t0_v_pod_dn,
+  "Meth POD CRP up"=meth_podcrp_up,
+  "Meth POD CRP down"=meth_podcrp_dn,
+  "Meth t0 CRP up"=meth_t0crp_up,
+  "Meth t0 CRP down"=meth_t0crp_dn,
+  "Meth t0 Vs POD up"=meth_t0_v_pod_up,
+  "Meth t0 Vs POD down"=meth_t0_v_pod_dn)
+
+xlr <- sapply(xl,length)
+
+xlr_up <- xlr[grep("up",names(xlr))]
+
+xlr_dn <- xlr[grep("down",names(xlr))]
+
+MAX=max(xlr_up)*1.2
+MIN=-max(xlr_dn)*1.2
+
+par(mar=c(5,5,5,5))
+names(xlr_up) <- gsub(" up","",names(xlr_up))
+barplot(xlr_up,ylim=c(MIN,MAX),cex.names=0.7,ylab="no. gene sets up- and down-regulated",col="lightblue")
+text(x = (1:length(xlr_up)*1.2)-0.5  , y = xlr_up , label = xlr_up, pos = 3, cex = 1, col = "black")
+barplot(-xlr_dn,ylim=c(MIN,MAX),cex.names=0.5, col="pink",add=T, xaxt='n')
+text(x = (1:length(xlr_up)*1.2)-0.5  , y = -xlr_dn-50 , label = xlr_dn, pos = 3, cex = 1, col = "black")
+
+
+MAX=max(xlr_up)*1.4
+MIN=-max(xlr_dn)*1.4
+
+par(mar=c(5,15,5,5))
+barplot(xlr_up,xlim=c(MIN,MAX),cex.names=1,main="no. gene sets up- and down-regulated",col="lightblue",horiz=TRUE,las=1)
+text(y = (1:length(xlr_up)*1.2)-0.75  , x = xlr_up + 50 , label = xlr_up, pos = 3, cex = 1, col = "black")
+barplot(-xlr_dn,ylim=c(MIN,MAX),cex.names=0.5, col="pink",add=T, yaxt='n',horiz=TRUE,las=1)
+text(y = (1:length(xlr_up)*1.2)-0.75  , x = -xlr_dn-50 , label = xlr_dn, pos = 3, cex = 1, col = "black")
+
+```
+
+## Venn diagrams on gene sets
+
+Now to identify the gene set overlaps (same omics different contrasts).
+
+```{r,rna_venn3}
+
+v1 <- list("RNA POD CRP up"=rna_podcrp_up,
+  "RNA POD CRP down"=rna_podcrp_dn,
+  "RNA t0 CRP up"=rna_t0crp_up,
+  "RNA t0 CRP down"=rna_t0crp_dn,
+  "RNA t0 Vs POD up"=rna_t0_v_pod_up,
+  "RNA t0 Vs POD down"=rna_t0_v_pod_dn)
+
+plot(euler(v1),quantities = TRUE)
+
+
+v1 <- list( "Meth POD CRP up"=meth_podcrp_up,
+  "Meth POD CRP down"=meth_podcrp_dn,
+  "Meth t0 CRP up"=meth_t0crp_up,
+  "Meth t0 CRP down"=meth_t0crp_dn,
+  "Meth t0 Vs POD up"=meth_t0_v_pod_up,
+  "Meth t0 Vs POD down"=meth_t0_v_pod_dn)
+
+plot(euler(v1),quantities = TRUE)
+
+```
+
+Now to identify the gene set overlaps (same contrast different omics).
+
+```{r,rna_venn4}
+
+v1 <- list("RNA POD CRP up"=rna_podcrp_up,
+  "RNA POD CRP down"=rna_podcrp_dn,
+  "Meth POD CRP up"=meth_podcrp_up,
+  "Meth POD CRP down"=meth_podcrp_dn)
+
+plot(euler(v1),quantities = TRUE)
+
+v1 <-  list( "RNA t0 CRP up"=rna_t0crp_up,
+  "RNA t0 CRP down"=rna_t0crp_dn,
+  "Meth t0 CRP up"=meth_t0crp_up,
+  "Meth t0 CRP down"=meth_t0crp_dn)
+
+plot(euler(v1),quantities = TRUE)
+
+
+v1 <- list("RNA t0 Vs POD up"=rna_t0_v_pod_up,
+  "RNA t0 Vs POD down"=rna_t0_v_pod_dn,
+  "Meth t0 Vs POD up"=meth_t0_v_pod_up,
+  "Meth t0 Vs POD down"=meth_t0_v_pod_dn)
+
+plot(euler(v1),quantities = TRUE)
+
+
+```
+
+
+## Session Info
+
+Session information.
+
+```{r,sessioninfo}
+
+sessionInfo()
+
+```
