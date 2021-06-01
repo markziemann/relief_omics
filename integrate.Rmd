@@ -5,6 +5,7 @@ date: "`r Sys.Date()`"
 output:
   html_document:
     toc: true
+    toc_float: true
     fig_width: 7
     fig_height: 7
 theme: cosmo
@@ -42,6 +43,7 @@ I notices that only 11370 genes had promoter methylation values, while 21907 had
 We might need to look at updating the array annotation to include more genes as the array annotation is from ~2014 and might be missing a lot of ncRNA genes.
 
 ```{r,importdata}
+
 # t0_v_pod_rna.tsv t0vPod_meth.tsv t0_v_pod
 x <- read.table("t0_v_pod_rna.tsv",header=TRUE, sep="\t")
 x$gene <- sapply(strsplit(rownames(x)," "),"[[",2)
@@ -275,7 +277,59 @@ dev.off()
 
 ```
 
+## Four way mitch analysis
+
+
+```{r, four_way}
+
+colnames(t0_crp) <-  c("t0_crp_RNA", "t0_crp_meth" )
+
+colnames( pod_crp ) <- c("pod_crp_RNA", "pod_crp_meth" )
+
+xx <- merge(t0_crp,pod_crp,by=0)
+
+rownames(xx) <- xx[,1]
+
+xx[,1]=NULL
+
+dim(xx)
+
+head(xx) %>% kbl() %>% kable_paper("hover", full_width = F)
+
+capture.output(
+    res <- mitch_calc(x=xx, genesets=genesets,priority="significance", resrows = 30)
+    , file = "/dev/null", append = FALSE,
+    type = c("output", "message"), split = FALSE)
+
+head(res$enrichment_result,30) %>% kbl() %>% kable_paper("hover", full_width = F)
+
+unlink("int_4way_sig.html")
+capture.output(
+    mitch_report(res, "int_4way_sig.html")
+    , file = "/dev/null", append = FALSE,
+    type = c("output", "message"), split = FALSE)
+
+mitch_plots(res,"int_4way_sig.pdf")
+
+top <- res$enrichment_result[1:50,c(4:7)]
+rownames(top) <- res$enrichment_result[1:50,1]
+pdf("int_4way_sig_heatmap.pdf",width=8,height=8)
+heatmap.2( as.matrix(top), col=colfunc(25),scale="none",
+ trace="none",margins = c(10,28), cexRow=.6, Colv=FALSE, dendrogram="row", cexCol=.8,  main="4way")
+dev.off()
+
+
+
+
+```
+
+
+
+
 ## Session information
+
 ```{r,sessioninfo}
+
 sessionInfo()
+
 ```
