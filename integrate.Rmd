@@ -318,13 +318,56 @@ heatmap.2( as.matrix(top), col=colfunc(25),scale="none",
  trace="none",margins = c(10,28), cexRow=.6, Colv=FALSE, dendrogram="row", cexCol=.8,  main="4way")
 dev.off()
 
-
-
-
 ```
 
+## 4 way with custon gene sets
 
 
+```{r, four_way}
+
+custom_genesets <- c(
+  "Neutrophil degranulation",
+  "Innate Immune System",
+  "Immune System",
+  "Signaling by Interleukins",
+  "Cytokine Signaling in Immune system",
+  "Signaling by Receptor Tyrosine Kinases",
+  "Platelet activation, signaling and aggregation",
+  "Signaling by ROBO receptors",
+  "Signal Transduction",
+  "Eukaryotic Translation Elongation",
+  "Peptide chain elongation",
+  "Formation of a pool of free 40S subunits",
+  "rRNA processing in the nucleus and cytosol",
+  "Nonsense-Mediated Decay (NMD)",
+  "Metabolism of RNA",
+  "Metabolism of lipids")
+
+genesets <- genesets[which(names(genesets) %in% custom_genesets)]
+
+capture.output(
+    res <- mitch_calc(x=xx, genesets=genesets,priority="significance", resrows = 30)
+    , file = "/dev/null", append = FALSE,
+    type = c("output", "message"), split = FALSE)
+
+head(res$enrichment_result,30) %>% kbl() %>% kable_paper("hover", full_width = F)
+
+unlink("int_4waycustom_sig.html")
+capture.output(
+    mitch_report(res, "int_4waycustom_sig.html")
+    , file = "/dev/null", append = FALSE,
+    type = c("output", "message"), split = FALSE)
+
+mitch_plots(res,"int_4waycustom_sig.pdf")
+
+top <- res$enrichment_result[,c(4:7)]
+rownames(top) <- res$enrichment_result[,1]
+pdf("int_4waycustom_sig_heatmap.pdf",width=8,height=8)
+heatmap.2( as.matrix(top), col=colfunc(25),scale="none",
+ trace="none",margins = c(10,28), cexRow=.8, Colv=FALSE, dendrogram="row", cexCol=.8,  main="4way")
+dev.off()
+
+```
 
 ## Session information
 
