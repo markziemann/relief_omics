@@ -109,23 +109,39 @@ xlr_dn <- xlr[grep("down",names(xlr))]
 
 MAX=max(xlr_up)*1.2
 MIN=-max(xlr_dn)*1.2
-
 par(mar=c(5,5,5,5))
 names(xlr_up) <- gsub(" up","",names(xlr_up))
 barplot(xlr_up,ylim=c(MIN,MAX),cex.names=0.8,ylab="no. genes/probes up- and down-regulated",col="lightblue")
 text(x = (1:length(xlr_up)*1.2)-0.5  , y = xlr_up , label = xlr_up, pos = 3, cex = 1, col = "black")
 barplot(-xlr_dn,ylim=c(MIN,MAX),cex.names=0.5, col="pink",add=T, xaxt='n')
 text(x = (1:length(xlr_up)*1.2)-0.5  , y = -xlr_dn-5000 , label = xlr_dn, pos = 3, cex = 1, col = "black")
-
-
 MAX=max(xlr_up)*1.4
 MIN=-max(xlr_dn)*1.4
-
 par(mar=c(5,15,5,5))
 barplot(xlr_up,xlim=c(MIN,MAX),cex.names=1,main="no. genes/probes up- and down-regulated",col="lightblue",horiz=TRUE,las=1)
 text(y = (1:length(xlr_up)*1.2)-0.75  , x = xlr_up + 5000 , label = xlr_up, pos = 3, cex = 1, col = "black")
 barplot(-xlr_dn,ylim=c(MIN,MAX),cex.names=0.5, col="pink",add=T, yaxt='n',horiz=TRUE,las=1)
 text(y = (1:length(xlr_up)*1.2)-0.75  , x = -xlr_dn-5000 , label = xlr_dn, pos = 3, cex = 1, col = "black")
+
+
+pdf("01_degs_dmps.pdf")
+MAX=max(xlr_up)*1.2
+MIN=-max(xlr_dn)*1.2
+par(mar=c(5,5,5,5))
+names(xlr_up) <- gsub(" up","",names(xlr_up))
+barplot(xlr_up,ylim=c(MIN,MAX),cex.names=0.8,ylab="no. genes/probes up- and down-regulated",col="lightblue")
+text(x = (1:length(xlr_up)*1.2)-0.5  , y = xlr_up , label = xlr_up, pos = 3, cex = 1, col = "black")
+barplot(-xlr_dn,ylim=c(MIN,MAX),cex.names=0.5, col="pink",add=T, xaxt='n')
+text(x = (1:length(xlr_up)*1.2)-0.5  , y = -xlr_dn-5000 , label = xlr_dn, pos = 3, cex = 1, col = "black")
+MAX=max(xlr_up)*1.4
+MIN=-max(xlr_dn)*1.4
+par(mar=c(5,15,5,5))
+barplot(xlr_up,xlim=c(MIN,MAX),cex.names=1,main="no. genes/probes up- and down-regulated",col="lightblue",horiz=TRUE,las=1)
+text(y = (1:length(xlr_up)*1.2)-0.75  , x = xlr_up + 5000 , label = xlr_up, pos = 3, cex = 1, col = "black")
+barplot(-xlr_dn,ylim=c(MIN,MAX),cex.names=0.5, col="pink",add=T, yaxt='n',horiz=TRUE,las=1)
+text(y = (1:length(xlr_up)*1.2)-0.75  , x = -xlr_dn-5000 , label = xlr_dn, pos = 3, cex = 1, col = "black")
+dev.off()
+
 
 ```
 
@@ -215,23 +231,38 @@ xlr_dn <- xlr[grep("down",names(xlr))]
 
 MAX=max(xlr_up)*1.2
 MIN=-max(xlr_dn)*1.2
-
 par(mar=c(5,5,5,5))
 names(xlr_up) <- gsub(" up","",names(xlr_up))
 barplot(xlr_up,ylim=c(MIN,MAX),cex.names=0.8,ylab="no. genes/probes up- and down-regulated",col="lightblue")
 text(x = (1:length(xlr_up)*1.2)-0.5  , y = xlr_up , label = xlr_up, pos = 3, cex = 1, col = "black")
 barplot(-xlr_dn,ylim=c(MIN,MAX),cex.names=0.5, col="pink",add=T, xaxt='n')
 text(x = (1:length(xlr_up)*1.2)-0.5  , y = -xlr_dn-1000 , label = xlr_dn, pos = 3, cex = 1, col = "black")
-
-
 MAX=max(xlr_up)*1.4
 MIN=-max(xlr_dn)*1.4
-
 par(mar=c(5,15,5,5))
 barplot(xlr_up,xlim=c(MIN,MAX),cex.names=1,main="no. genes/probes up- and down-regulated",col="lightblue",horiz=TRUE,las=1)
 text(y = (1:length(xlr_up)*1.2)-0.75  , x = xlr_up + 1000 , label = xlr_up, pos = 3, cex = 1, col = "black")
 barplot(-xlr_dn,ylim=c(MIN,MAX),cex.names=0.5, col="pink",add=T, yaxt='n',horiz=TRUE,las=1)
 text(y = (1:length(xlr_up)*1.2)-0.75  , x = -xlr_dn-1000 , label = xlr_dn, pos = 3, cex = 1, col = "black")
+
+pdf("02_degs_dmgs.pdf")
+MAX=max(xlr_up)*1.2
+MIN=-max(xlr_dn)*1.2
+par(mar=c(5,5,5,5))
+names(xlr_up) <- gsub(" up","",names(xlr_up))
+barplot(xlr_up,ylim=c(MIN,MAX),cex.names=0.8,ylab="no. genes/probes up- and down-regulated",col="lightblue")
+text(x = (1:length(xlr_up)*1.2)-0.5  , y = xlr_up , label = xlr_up, pos = 3, cex = 1, col = "black")
+barplot(-xlr_dn,ylim=c(MIN,MAX),cex.names=0.5, col="pink",add=T, xaxt='n')
+text(x = (1:length(xlr_up)*1.2)-0.5  , y = -xlr_dn-1000 , label = xlr_dn, pos = 3, cex = 1, col = "black")
+MAX=max(xlr_up)*1.4
+MIN=-max(xlr_dn)*1.4
+par(mar=c(5,15,5,5))
+barplot(xlr_up,xlim=c(MIN,MAX),cex.names=1,main="no. genes/probes up- and down-regulated",col="lightblue",horiz=TRUE,las=1)
+text(y = (1:length(xlr_up)*1.2)-0.75  , x = xlr_up + 1000 , label = xlr_up, pos = 3, cex = 1, col = "black")
+barplot(-xlr_dn,ylim=c(MIN,MAX),cex.names=0.5, col="pink",add=T, yaxt='n',horiz=TRUE,las=1)
+text(y = (1:length(xlr_up)*1.2)-0.75  , x = -xlr_dn-1000 , label = xlr_dn, pos = 3, cex = 1, col = "black")
+dev.off()
+
 
 ```
 
@@ -248,10 +279,7 @@ v1 <- list("RNA POD CRP up"=rna_podcrp_up,
   "RNA t0 Vs POD up"=rna_t0_v_pod_up,
   "RNA t0 Vs POD down"=rna_t0_v_pod_dn)
 
-plot(euler(v1),quantities = TRUE)
-
-
-v1 <- list( "Meth POD CRP up"=meth_podcrp_up,
+v2 <- list( "Meth POD CRP up"=meth_podcrp_up,
   "Meth POD CRP down"=meth_podcrp_dn,
   "Meth t0 CRP up"=meth_t0crp_up,
   "Meth t0 CRP down"=meth_t0crp_dn,
@@ -259,6 +287,12 @@ v1 <- list( "Meth POD CRP up"=meth_podcrp_up,
   "Meth t0 Vs POD down"=meth_t0_v_pod_dn)
 
 plot(euler(v1),quantities = TRUE)
+plot(euler(v2),quantities = TRUE)
+
+pdf("03_venn1.pdf")
+plot(euler(v1),quantities = TRUE)
+plot(euler(v2),quantities = TRUE)
+dev.off()
 
 ```
 
@@ -271,22 +305,25 @@ v1 <- list("RNA POD CRP up"=rna_podcrp_up,
   "Meth POD CRP up"=meth_podcrp_up,
   "Meth POD CRP down"=meth_podcrp_dn)
 
-plot(euler(v1),quantities = TRUE)
-
-v1 <-  list( "RNA t0 CRP up"=rna_t0crp_up,
+v2 <-  list( "RNA t0 CRP up"=rna_t0crp_up,
   "RNA t0 CRP down"=rna_t0crp_dn,
   "Meth t0 CRP up"=meth_t0crp_up,
   "Meth t0 CRP down"=meth_t0crp_dn)
 
-plot(euler(v1),quantities = TRUE)
-
-
-v1 <- list("RNA t0 Vs POD up"=rna_t0_v_pod_up,
+v3 <- list("RNA t0 Vs POD up"=rna_t0_v_pod_up,
   "RNA t0 Vs POD down"=rna_t0_v_pod_dn,
   "Meth t0 Vs POD up"=meth_t0_v_pod_up,
   "Meth t0 Vs POD down"=meth_t0_v_pod_dn)
 
 plot(euler(v1),quantities = TRUE)
+plot(euler(v2),quantities = TRUE)
+plot(euler(v3),quantities = TRUE)
+
+pdf("04_venn2.pdf")
+plot(euler(v1),quantities = TRUE)
+plot(euler(v2),quantities = TRUE)
+plot(euler(v3),quantities = TRUE)
+dev.off()
 
 ```
 
@@ -439,26 +476,32 @@ ggplot(top, aes(s.dist, set, size = setSize)) + geom_point(aes(colour=-log10(top
 gt <- as.data.frame(rownames(rna_podcrp))
 gt$genename <- sapply(strsplit(gt[,1]," "),"[[",2)
 y <-mitch_import(x=rna_podcrp,DEtype="deseq2",geneTable=gt)
-yres <- mitch_calc(y,genesets=genesets)
-mitch_bubbleplot(yres,30)
-rna_podcrp_up <-  subset(yres$enrichment_result,p.adjustANOVA < 0.05 & s.dist > 0)$set
-rna_podcrp_dn <-  subset(yres$enrichment_result,p.adjustANOVA < 0.05 & s.dist < 0)$set
+yres1 <- mitch_calc(y,genesets=genesets)
+mitch_bubbleplot(yres1,30)
+rna_podcrp_up <-  subset(yres1$enrichment_result,p.adjustANOVA < 0.05 & s.dist > 0)$set
+rna_podcrp_dn <-  subset(yres1$enrichment_result,p.adjustANOVA < 0.05 & s.dist < 0)$set
 
 gt <- as.data.frame(rownames(rna_t0crp))
 gt$genename <- sapply(strsplit(gt[,1]," "),"[[",2)
 y <-mitch_import(x=rna_t0crp,DEtype="deseq2",geneTable=gt)
-yres <- mitch_calc(y,genesets=genesets)
-mitch_bubbleplot(yres,30)
-rna_t0crp_up <-  subset(yres$enrichment_result,p.adjustANOVA < 0.05 & s.dist > 0)$set
-rna_t0crp_dn <-  subset(yres$enrichment_result,p.adjustANOVA < 0.05 & s.dist < 0)$set
+yres2 <- mitch_calc(y,genesets=genesets)
+mitch_bubbleplot(yres2,30)
+rna_t0crp_up <-  subset(yres2$enrichment_result,p.adjustANOVA < 0.05 & s.dist > 0)$set
+rna_t0crp_dn <-  subset(yres2$enrichment_result,p.adjustANOVA < 0.05 & s.dist < 0)$set
 
 gt <- as.data.frame(rownames(rna_t0_v_pod))
 gt$genename <- sapply(strsplit(gt[,1]," "),"[[",2)
 y <-mitch_import(x=rna_t0_v_pod,DEtype="deseq2",geneTable=gt)
-yres <- mitch_calc(y,genesets=genesets)
-mitch_bubbleplot(yres,30)
-rna_t0_v_pod_up <-  subset(yres$enrichment_result,p.adjustANOVA < 0.05 & s.dist > 0)$set
-rna_t0_v_pod_dn <-  subset(yres$enrichment_result,p.adjustANOVA < 0.05 & s.dist < 0)$set
+yres3 <- mitch_calc(y,genesets=genesets)
+mitch_bubbleplot(yres3,30)
+rna_t0_v_pod_up <- subset(yres3$enrichment_result,p.adjustANOVA < 0.05 & s.dist > 0)$set
+rna_t0_v_pod_dn <- subset(yres3$enrichment_result,p.adjustANOVA < 0.05 & s.dist < 0)$set
+
+pdf("05_bubble1.pdf")
+mitch_bubbleplot(yres1,30)
+mitch_bubbleplot(yres2,30)
+mitch_bubbleplot(yres3,30)
+dev.off()
 
 ```
 
@@ -482,21 +525,26 @@ run_mitch_1d <- function(dma,name) {
   return(res)
 }
 
+yres4 <- run_mitch_1d(dma= meth_podcrp , name="meth_podcrp")
+mitch_bubbleplot(yres4,30)
+meth_podcrp_up <-  subset(yres4$enrichment_result,p.adjustANOVA < 0.05 & s.dist > 0)$set
+meth_podcrp_dn <-  subset(yres4$enrichment_result,p.adjustANOVA < 0.05 & s.dist < 0)$set
 
-yres <- run_mitch_1d(dma= meth_podcrp , name="meth_podcrp")
-mitch_bubbleplot(yres,30)
-meth_podcrp_up <-  subset(yres$enrichment_result,p.adjustANOVA < 0.05 & s.dist > 0)$set
-meth_podcrp_dn <-  subset(yres$enrichment_result,p.adjustANOVA < 0.05 & s.dist < 0)$set
+yres5 <- run_mitch_1d(dma= meth_t0crp , name="meth_t0crp")
+mitch_bubbleplot(yres5,30)
+meth_t0crp_up <-  subset(yres5$enrichment_result,p.adjustANOVA < 0.05 & s.dist > 0)$set
+meth_t0crp_dn <-  subset(yres5$enrichment_result,p.adjustANOVA < 0.05 & s.dist < 0)$set
 
-yres <- run_mitch_1d(dma= meth_t0crp , name="meth_t0crp")
-mitch_bubbleplot(yres,30)
-meth_t0crp_up <-  subset(yres$enrichment_result,p.adjustANOVA < 0.05 & s.dist > 0)$set
-meth_t0crp_dn <-  subset(yres$enrichment_result,p.adjustANOVA < 0.05 & s.dist < 0)$set
+yres6 <- run_mitch_1d(dma= meth_t0_v_pod , name="meth_t0_v_pod")
+mitch_bubbleplot(yres6,30)
+meth_t0_v_pod_up <-  subset(yres6$enrichment_result,p.adjustANOVA < 0.05 & s.dist > 0)$set
+meth_t0_v_pod_dn <-  subset(yres6$enrichment_result,p.adjustANOVA < 0.05 & s.dist < 0)$set
 
-yres <- run_mitch_1d(dma= meth_t0_v_pod , name="meth_t0_v_pod")
-mitch_bubbleplot(yres,30)
-meth_t0_v_pod_up <-  subset(yres$enrichment_result,p.adjustANOVA < 0.05 & s.dist > 0)$set
-meth_t0_v_pod_dn <-  subset(yres$enrichment_result,p.adjustANOVA < 0.05 & s.dist < 0)$set
+pdf("06_bubble2.pdf")
+mitch_bubbleplot(yres4,30)
+mitch_bubbleplot(yres5,30)
+mitch_bubbleplot(yres6,30)
+dev.off()
 
 ```
 
@@ -525,23 +573,38 @@ xlr_dn <- xlr[grep("down",names(xlr))]
 
 MAX=max(xlr_up)*1.2
 MIN=-max(xlr_dn)*1.2
-
 par(mar=c(5,5,5,5))
 names(xlr_up) <- gsub(" up","",names(xlr_up))
 barplot(xlr_up,ylim=c(MIN,MAX),cex.names=0.7,ylab="no. gene sets up- and down-regulated",col="lightblue")
 text(x = (1:length(xlr_up)*1.2)-0.5  , y = xlr_up , label = xlr_up, pos = 3, cex = 1, col = "black")
 barplot(-xlr_dn,ylim=c(MIN,MAX),cex.names=0.5, col="pink",add=T, xaxt='n')
 text(x = (1:length(xlr_up)*1.2)-0.5  , y = -xlr_dn-50 , label = xlr_dn, pos = 3, cex = 1, col = "black")
-
-
 MAX=max(xlr_up)*1.4
 MIN=-max(xlr_dn)*1.4
-
 par(mar=c(5,15,5,5))
 barplot(xlr_up,xlim=c(MIN,MAX),cex.names=1,main="no. gene sets up- and down-regulated",col="lightblue",horiz=TRUE,las=1)
 text(y = (1:length(xlr_up)*1.2)-0.75  , x = xlr_up + 50 , label = xlr_up, pos = 3, cex = 1, col = "black")
 barplot(-xlr_dn,ylim=c(MIN,MAX),cex.names=0.5, col="pink",add=T, yaxt='n',horiz=TRUE,las=1)
 text(y = (1:length(xlr_up)*1.2)-0.75  , x = -xlr_dn-50 , label = xlr_dn, pos = 3, cex = 1, col = "black")
+
+
+pdf("07_genesetbarplot1.pdf")
+MAX=max(xlr_up)*1.2
+MIN=-max(xlr_dn)*1.2
+par(mar=c(5,5,5,5))
+names(xlr_up) <- gsub(" up","",names(xlr_up))
+barplot(xlr_up,ylim=c(MIN,MAX),cex.names=0.7,ylab="no. gene sets up- and down-regulated",col="lightblue")
+text(x = (1:length(xlr_up)*1.2)-0.5  , y = xlr_up , label = xlr_up, pos = 3, cex = 1, col = "black")
+barplot(-xlr_dn,ylim=c(MIN,MAX),cex.names=0.5, col="pink",add=T, xaxt='n')
+text(x = (1:length(xlr_up)*1.2)-0.5  , y = -xlr_dn-50 , label = xlr_dn, pos = 3, cex = 1, col = "black")
+MAX=max(xlr_up)*1.4
+MIN=-max(xlr_dn)*1.4
+par(mar=c(5,15,5,5))
+barplot(xlr_up,xlim=c(MIN,MAX),cex.names=1,main="no. gene sets up- and down-regulated",col="lightblue",horiz=TRUE,las=1)
+text(y = (1:length(xlr_up)*1.2)-0.75  , x = xlr_up + 50 , label = xlr_up, pos = 3, cex = 1, col = "black")
+barplot(-xlr_dn,ylim=c(MIN,MAX),cex.names=0.5, col="pink",add=T, yaxt='n',horiz=TRUE,las=1)
+text(y = (1:length(xlr_up)*1.2)-0.75  , x = -xlr_dn-50 , label = xlr_dn, pos = 3, cex = 1, col = "black")
+dev.off()
 
 ```
 
@@ -558,10 +621,7 @@ v1 <- list("RNA POD CRP up"=rna_podcrp_up,
   "RNA t0 Vs POD up"=rna_t0_v_pod_up,
   "RNA t0 Vs POD down"=rna_t0_v_pod_dn)
 
-plot(euler(v1),quantities = TRUE)
-
-
-v1 <- list( "Meth POD CRP up"=meth_podcrp_up,
+v2 <- list( "Meth POD CRP up"=meth_podcrp_up,
   "Meth POD CRP down"=meth_podcrp_dn,
   "Meth t0 CRP up"=meth_t0crp_up,
   "Meth t0 CRP down"=meth_t0crp_dn,
@@ -569,6 +629,12 @@ v1 <- list( "Meth POD CRP up"=meth_podcrp_up,
   "Meth t0 Vs POD down"=meth_t0_v_pod_dn)
 
 plot(euler(v1),quantities = TRUE)
+plot(euler(v2),quantities = TRUE)
+
+pdf("08_genesetvenn1.pdf")
+plot(euler(v1),quantities = TRUE)
+plot(euler(v2),quantities = TRUE)
+dev.off()
 
 ```
 
@@ -581,23 +647,25 @@ v1 <- list("RNA POD CRP up"=rna_podcrp_up,
   "Meth POD CRP up"=meth_podcrp_up,
   "Meth POD CRP down"=meth_podcrp_dn)
 
-plot(euler(v1),quantities = TRUE)
-
-v1 <-  list( "RNA t0 CRP up"=rna_t0crp_up,
+v2 <-  list( "RNA t0 CRP up"=rna_t0crp_up,
   "RNA t0 CRP down"=rna_t0crp_dn,
   "Meth t0 CRP up"=meth_t0crp_up,
   "Meth t0 CRP down"=meth_t0crp_dn)
 
-plot(euler(v1),quantities = TRUE)
-
-
-v1 <- list("RNA t0 Vs POD up"=rna_t0_v_pod_up,
+v3 <- list("RNA t0 Vs POD up"=rna_t0_v_pod_up,
   "RNA t0 Vs POD down"=rna_t0_v_pod_dn,
   "Meth t0 Vs POD up"=meth_t0_v_pod_up,
   "Meth t0 Vs POD down"=meth_t0_v_pod_dn)
 
 plot(euler(v1),quantities = TRUE)
+plot(euler(v2),quantities = TRUE)
+plot(euler(v3),quantities = TRUE)
 
+pdf("09_genesetvenn1.pdf")
+plot(euler(v1),quantities = TRUE)
+plot(euler(v2),quantities = TRUE)
+plot(euler(v3),quantities = TRUE)
+dev.off()
 
 ```
 
