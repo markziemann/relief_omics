@@ -131,7 +131,7 @@ head(t0_v_pod) %>% kbl() %>% kable_paper("hover", full_width = F)
 dim(t0_v_pod)
 
 capture.output(
-    res <- mitch_calc(x=t0_v_pod, genesets=genesets,priority="significance", resrows = 30)
+    res <- mitch_calc(x=t0_v_pod, genesets=genesets,priority="significance", resrows = 100)
     , file = "/dev/null", append = FALSE,
     type = c("output", "message"), split = FALSE)
 
@@ -155,7 +155,7 @@ heatmap.2( as.matrix(top), col=colfunc(25),scale="none",
 dev.off()
 
 capture.output(
-    res <- mitch_calc(x=t0_v_pod, genesets=genesets,priority="effect" , resrows = 30)
+    res <- mitch_calc(x=t0_v_pod, genesets=genesets,priority="effect" , resrows = 100)
     , file = "/dev/null", append = FALSE,
     type = c("output", "message"), split = FALSE)
 
@@ -182,7 +182,7 @@ head(pod_crp) %>% kbl() %>% kable_paper("hover", full_width = F)
 dim(pod_crp)
 
 capture.output(
-    res <- mitch_calc(x=pod_crp, genesets=genesets,priority="significance", resrows = 30)
+    res <- mitch_calc(x=pod_crp, genesets=genesets,priority="significance", resrows = 100)
     , file = "/dev/null", append = FALSE,
     type = c("output", "message"), split = FALSE)
 
@@ -204,7 +204,7 @@ heatmap.2( as.matrix(top), col=colfunc(25),scale="none",
 dev.off()
 
 capture.output(
-    res <- mitch_calc(x=pod_crp, genesets=genesets,priority="effect", resrows = 30)
+    res <- mitch_calc(x=pod_crp, genesets=genesets,priority="effect", resrows = 100)
     , file = "/dev/null", append = FALSE,
     type = c("output", "message"), split = FALSE)
 
@@ -231,7 +231,7 @@ head(t0_crp) %>% kbl() %>% kable_paper("hover", full_width = F)
 dim(t0_crp)
 
 capture.output(
-    res <- mitch_calc(x=t0_crp, genesets=genesets,priority="significance", resrows = 30)
+    res <- mitch_calc(x=t0_crp, genesets=genesets,priority="significance", resrows = 100)
     , file = "/dev/null", append = FALSE,
     type = c("output", "message"), split = FALSE)
 
@@ -253,7 +253,7 @@ heatmap.2( as.matrix(top), col=colfunc(25),scale="none",
 dev.off()
 
 capture.output(
-    res <- mitch_calc(x=t0_crp, genesets=genesets,priority="effect", resrows = 30)
+    res <- mitch_calc(x=t0_crp, genesets=genesets,priority="effect", resrows = 100)
     , file = "/dev/null", append = FALSE,
     type = c("output", "message"), split = FALSE)
 
@@ -297,7 +297,7 @@ dim(xx)
 head(xx) %>% kbl() %>% kable_paper("hover", full_width = F)
 
 capture.output(
-    res <- mitch_calc(x=xx, genesets=genesets,priority="significance", resrows = 30)
+    res <- mitch_calc(x=xx, genesets=genesets,priority="significance", resrows = 100)
     , file = "/dev/null", append = FALSE,
     type = c("output", "message"), split = FALSE)
 
@@ -323,7 +323,7 @@ dev.off()
 ## 4 way with custon gene sets
 
 
-```{r, four_way}
+```{r, four_way_custom}
 
 custom_genesets <- c(
   "Neutrophil degranulation",
@@ -346,7 +346,7 @@ custom_genesets <- c(
 genesets <- genesets[which(names(genesets) %in% custom_genesets)]
 
 capture.output(
-    res <- mitch_calc(x=xx, genesets=genesets,priority="significance", resrows = 30)
+    res <- mitch_calc(x=xx, genesets=genesets,priority="significance", resrows = 100)
     , file = "/dev/null", append = FALSE,
     type = c("output", "message"), split = FALSE)
 
