@@ -1,0 +1,126 @@
+---
+title: "RELIEF: RNA expression analysis - searching for stable genes"
+author: "Mark Ziemann"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    fig_width: 7
+    fig_height: 7
+theme: cosmo
+---
+
+# Introduction
+
+
+# Packages 
+
+```{r,packages}
+
+suppressPackageStartupMessages({
+    library("zoo")
+    library("tidyverse")
+    library("reshape2")
+    library("DESeq2")
+    library("gplots")
+    library("fgsea")
+    library("MASS")
+    library("mitch")
+    library("eulerr")
+    library("limma")
+    library("topconfects")
+})
+
+```
+
+# Import read counts
+
+```{r,importdata}
+
+tmp <- read.table("3col.tsv",header=F)
+x <- as.matrix(acast(tmp, V2~V1, value.var="V3", fun.aggregate = sum))
+x <- as.data.frame(x)
+accession <- sapply((strsplit(rownames(x),"\\|")),"[[",2)
+symbol<-sapply((strsplit(rownames(x),"\\|")),"[[",6)
+x$geneid <- paste(accession,symbol)
+
+xx <- aggregate(. ~ geneid,x,sum)
+rownames(xx) <- xx$geneid
+colnames <- gsub("T0R","T0",colnames(xx))
+xx$geneid = NULL
+xx <- round(xx)
+dim(xx)
+
+rpm <- apply(xx, 2 , function(x) { x / sum(x) } ) * 1000000
+rpm <- rpm[rowMeans(rpm) > 1,]
+dim(rpm)
+mysd <- apply(rpm,1,sd)
+mymean <- apply(rpm,1,mean)
+
+mycv <- mysd/mymean
+
+best <- names(head(mycv[order(mycv)],20))
+best_sd <- mysd[which(names(mysd) %in% best)]
+best_mean <- mymean[which(names(mymean) %in% best)]
+
+worst <- names(tail(mycv[order(mycv)],20))
+
+plot(mymean,mysd,log="xy", xlab="mean (RPM)",ylab="SD (RPM)",
+  main="mean expression Vs standard deviation")
+mtext("red: most stable genes")
+
+points(best_mean,best_sd,cex=2,col="red")
+
+```
+
+Now some visualisation.
+Start with heatmap of most stable and least stable genes.
+
+```{r,heat}
+
+mxbest <- rpm[rownames(rpm) %in% best,]
+heatmap.2(mxbest,trace="none",scale="row",main="most stable", mar=c(5,13),cexRow=0.8)
+
+mxworst <- rpm[rownames(rpm) %in% worst,]
+heatmap.2(mxworst,trace="none",scale="row",main="least stable",mar=c(5,13), cexRow=0.8)
+
+```
+
+Now show as barplots.
+20 most stable and 20 least stable.
+
+```{r,bars}
+
+null <- sapply(best, function(g) {
+  par(mar=c(5,10,5,2))
+  dat <- rpm[rownames(rpm) == g,]
+  sd1 <- signif(sd(dat),4)
+  mean1 <- signif(mean(dat),4)
+  cv1 <- signif(sd1/mean1,4)
+  barplot(dat,horiz=TRUE,las=1,main=g,xlab="RPM",cex.names=0.5)
+  HEADER=paste("mean=",mean1,"sd=",sd1,"cv=",cv1)
+  mtext(HEADER)
+})
+
+null <- sapply(worst, function(g) {
+  par(mar=c(5,10,5,2))
+  dat <- rpm[rownames(rpm) == g,]
+  sd1 <- signif(sd(dat),4)
+  mean1 <- signif(mean(dat),4)
+  cv1 <- signif(sd1/mean1,4)
+  barplot(dat,horiz=TRUE,las=1,main=g,xlab="RPM",cex.names=0.5)
+  HEADER=paste("mean=",mean1,"sd=",sd1,"cv=",cv1)
+  mtext(HEADER)
+})
+
+```
+
+## Session information
+
+```{r,session}
+
+sessionInfo()
+
+```
+
